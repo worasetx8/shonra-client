@@ -43,9 +43,19 @@ RUN echo "=== Starting Next.js build ===" && \
     tail -20 /tmp/build.log && \
     echo "" && \
     echo "=== Verifying build output ===" && \
-    ls -la /app/.next/standalone 2>/dev/null && echo "✅ standalone folder exists" || echo "❌ standalone folder not found!" && \
-    ls -la /app/.next/static 2>/dev/null && echo "✅ static folder exists" || echo "❌ static folder not found!" && \
-    test -f /app/.next/standalone/server.js && echo "✅ server.js exists" || echo "❌ server.js not found!"
+    (test -d /app/.next/standalone && echo "✅ standalone folder exists" || (echo "❌ standalone folder not found!" && exit 1)) && \
+    (test -d /app/.next/static && echo "✅ static folder exists" || (echo "❌ static folder not found!" && exit 1)) && \
+    (test -f /app/.next/standalone/server.js && echo "✅ server.js exists" || (echo "❌ server.js not found!" && exit 1)) && \
+    echo "" && \
+    echo "=== Build verification complete ===" && \
+    echo "Contents of .next:" && \
+    ls -la /app/.next/ && \
+    echo "" && \
+    echo "Contents of .next/standalone:" && \
+    ls -la /app/.next/standalone/ | head -20 && \
+    echo "" && \
+    echo "Contents of .next/static:" && \
+    ls -la /app/.next/static/ | head -20
 
 # Production Stage
 FROM node:20.15.1-alpine AS runner
@@ -61,8 +71,15 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copy necessary files from build stage
 # Next.js standalone output includes only necessary files
 # The standalone folder contains server.js and node_modules
+
+# Copy public folder
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
+
+# Copy standalone output (required)
 COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
+
+# Copy static files (required for Next.js)
+# Note: .next/static must exist after build, if not the build failed
 COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Permissions are set via --chown in COPY commands above
