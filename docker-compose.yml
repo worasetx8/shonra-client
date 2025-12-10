@@ -16,9 +16,10 @@ services:
       - stack.env
     environment:
       # Server-side API routes need BACKEND_URL (not NEXT_PUBLIC_BACKEND_URL)
-      # Try internal Docker network name first, fallback to public URL
+      # Use internal Docker network name for better performance
+      # Service name must match the service name in server/docker-compose.yml (backend-api)
       - BACKEND_URL=http://backend-api:3002
-      # Fallback to public URL if internal network doesn't work
+      # Fallback to public URL if internal network doesn't work (uncomment if needed)
       # - BACKEND_URL=https://api.shonra.com
     restart: always
     # Expose port for internal network access (nginx-proxy)

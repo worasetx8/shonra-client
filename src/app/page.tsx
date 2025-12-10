@@ -846,13 +846,38 @@ export default function NewHomePage() {
 
   // Effects
   useEffect(() => {
-    fetchSettings();
-    fetchCategories();
-    fetchTags();
-    fetchProducts('all', 'all');
-    fetchFlashSaleProducts();
-    fetchFlashSaleBanner();
-    fetchPopupBanner();
+    // Stagger API calls to avoid rate limiting (429 errors)
+    // Add small delays between calls to prevent hitting rate limit
+    const loadData = async () => {
+      try {
+        // First batch - critical data
+        await fetchSettings();
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
+        
+        await fetchCategories();
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
+        
+        await fetchTags();
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
+        
+        // Second batch - product data
+        await fetchProducts('all', 'all');
+        await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
+        
+        // Third batch - flash sale data
+        await fetchFlashSaleProducts();
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
+        
+        await fetchFlashSaleBanner();
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
+        
+        await fetchPopupBanner();
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      }
+    };
+    
+    loadData();
   }, []);
 
   useEffect(() => {

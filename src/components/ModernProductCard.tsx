@@ -120,13 +120,29 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
       });
 
       if (!saveResponse.ok) {
-        throw new Error('Failed to save product');
+        const errorText = await saveResponse.text();
+        console.error('Save product failed:', {
+          status: saveResponse.status,
+          statusText: saveResponse.statusText,
+          error: errorText
+        });
+        throw new Error(`Failed to save product: ${saveResponse.status} ${errorText}`);
       }
+
+      const result = await saveResponse.json();
+      console.log('Product saved successfully:', result);
 
       // Open affiliate link in new tab
       window.open(product.offerLink, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Error saving product:', error);
+      // Log detailed error for debugging
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack
+        });
+      }
       // Still open the link even if save fails
       window.open(product.offerLink, '_blank', 'noopener,noreferrer');
     } finally {

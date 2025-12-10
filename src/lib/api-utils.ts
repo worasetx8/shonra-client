@@ -12,8 +12,15 @@ export function getBackendUrl(): string {
     // Running in Node.js (server-side)
     // Try BACKEND_URL first (for Docker internal network)
     // Fallback to NEXT_PUBLIC_BACKEND_URL (for public URL)
-    // Last fallback to internal Docker network name
-    return process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "https://api.shonra.com"; // Public URL as fallback
+    // Last fallback to public URL
+    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "https://api.shonra.com";
+    // Log for debugging (only in development or when explicitly enabled)
+    if (process.env.NODE_ENV === 'development' || process.env.DEBUG_BACKEND_URL === 'true') {
+      console.log(`[getBackendUrl] Server-side BACKEND_URL: ${process.env.BACKEND_URL || 'not set'}`);
+      console.log(`[getBackendUrl] Server-side NEXT_PUBLIC_BACKEND_URL: ${process.env.NEXT_PUBLIC_BACKEND_URL || 'not set'}`);
+      console.log(`[getBackendUrl] Using: ${backendUrl}`);
+    }
+    return backendUrl;
   }
   // Client-side: Use NEXT_PUBLIC_BACKEND_URL
   return process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";

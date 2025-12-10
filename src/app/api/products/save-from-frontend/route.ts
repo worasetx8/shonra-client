@@ -18,16 +18,26 @@ export async function POST(request: NextRequest) {
     };
 
     const BACKEND_URL = getBackendUrl();
-    const response = await fetch(`${BACKEND_URL}/api/products/save-from-frontend`, {
+    const apiUrl = `${BACKEND_URL}/api/products/save-from-frontend`;
+    
+    console.log(`[Save Product API] Calling backend: ${apiUrl}`);
+    console.log(`[Save Product API] BACKEND_URL: ${BACKEND_URL}`);
+    console.log(`[Save Product API] Product data:`, JSON.stringify(productData, null, 2));
+    
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(productData)
+      body: JSON.stringify(productData),
+      // Add timeout to prevent hanging
+      signal: AbortSignal.timeout(30000), // 30 seconds timeout
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[Save Product API] Backend error: ${response.status}`, errorText);
+      console.error(`[Save Product API] Backend URL used: ${apiUrl}`);
       throw new Error(`Backend responded with ${response.status}: ${errorText}`);
     }
 
