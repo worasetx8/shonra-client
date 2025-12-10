@@ -39,8 +39,43 @@ RUN echo "=== Starting Next.js Build ===" && \
         exit 1; \
     } && \
     echo "✅ Build completed successfully" && \
-    ls -la .next/standalone 2>/dev/null || echo "⚠️ Warning: .next/standalone not found, checking .next directory..." && \
-    ls -la .next/ 2>/dev/null || echo "⚠️ Warning: .next directory not found"
+    echo "=== Checking build output ===" && \
+    if [ ! -d ".next" ]; then \
+        echo "❌ ERROR: .next directory not found after build!"; \
+        exit 1; \
+    fi && \
+    ls -la .next/ && \
+    echo "" && \
+    echo "=== Checking for standalone output ===" && \
+    if [ -d ".next/standalone" ]; then \
+        echo "✅ Standalone output found"; \
+        echo "Standalone directory contents:"; \
+        ls -la .next/standalone/; \
+        echo ""; \
+        if [ -f ".next/standalone/server.js" ]; then \
+            echo "✅ server.js found in standalone"; \
+        else \
+            echo "❌ ERROR: server.js not found in standalone!"; \
+            exit 1; \
+        fi; \
+    else \
+        echo "❌ ERROR: Standalone output not found!"; \
+        echo ""; \
+        echo "This usually means:"; \
+        echo "1. next.config.js is missing 'output: standalone'"; \
+        echo "2. Next.js version doesn't support standalone output"; \
+        echo "3. Build failed silently"; \
+        echo ""; \
+        echo "Checking next.config.js:"; \
+        grep -i "output" next.config.js 2>/dev/null || echo "⚠️ next.config.js not found or no output config"; \
+        echo ""; \
+        echo "Checking Next.js version:"; \
+        npm list next 2>/dev/null | grep next || echo "⚠️ Could not determine Next.js version"; \
+        echo ""; \
+        echo "Checking .next directory structure:"; \
+        find .next -type f -name "*.js" | head -10 || echo "No JS files found"; \
+        exit 1; \
+    fi
 
 # Production Stage
 FROM node:20.15.1-alpine AS runner
@@ -54,11 +89,17 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
 # Copy necessary files from build stage
-# Next.js standalone output includes only necessary files
-# The standalone folder contains server.js and node_modules
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
-COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy standalone output - Next.js 14+ with output: "standalone" generates this
+# The standalone folder structure is:
+#   standalone/
+#     server.js
+#     node_modules/
+#     package.json
+#     .next/
+COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
 
 # Permissions are set via --chown in COPY commands above
 
