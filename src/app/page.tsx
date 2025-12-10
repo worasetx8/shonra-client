@@ -84,8 +84,6 @@ export default function NewHomePage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isFlashSaleModalOpen, setIsFlashSaleModalOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [nowSec, setNowSec] = useState<number>(Math.floor(Date.now() / 1000)); // ใช้สำหรับ countdown รายสินค้า
-  
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
@@ -101,7 +99,7 @@ export default function NewHomePage() {
     min_commission_rate: 10,
     min_rating_star: 4.5
   });
-  const [defaultCountdown, setDefaultCountdown] = useState<number>(3600); // Default countdown สำหรับสินค้าที่ไม่มี periodEndTime
+  // Removed defaultCountdown state to prevent continuous re-renders
   const [hasMoreFlashSale, setHasMoreFlashSale] = useState<boolean>(false); // ตรวจสอบว่ามีสินค้า Flash Sale เพิ่มเติมหรือไม่
   const [bannerKey, setBannerKey] = useState<number>(0); // Key for forcing image reload
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false); // Loading state for auto-load
@@ -270,27 +268,33 @@ export default function NewHomePage() {
               : `${backendUrl}/${imageUrl}`;
           }
           
-          // Return image URL without cache-busting (let browser cache handle it)
-          setFlashSaleBanner({
-            image_url: fullImageUrl,
-            target_url: banner.target_url || null,
-            alt_text: banner.alt_text || 'Flash Sale Banner',
-            open_new_tab: banner.open_new_tab === 1 || banner.open_new_tab === true,
+          // Only update banner if URL actually changed to prevent unnecessary re-renders
+          setFlashSaleBanner((prevBanner) => {
+            // If banner URL hasn't changed, don't update (prevent re-render)
+            if (prevBanner && prevBanner.image_url === fullImageUrl) {
+              return prevBanner;
+            }
+            // Update banner key only when URL changes
+            setBannerKey(prev => prev + 1);
+            return {
+              image_url: fullImageUrl,
+              target_url: banner.target_url || null,
+              alt_text: banner.alt_text || 'Flash Sale Banner',
+              open_new_tab: banner.open_new_tab === 1 || banner.open_new_tab === true,
+            };
           });
-          
-          // Update banner key to force image reload (works for both base64 and regular URLs)
-          setBannerKey(prev => prev + 1);
         } else {
-          // Banner data exists but no image_url
-          setFlashSaleBanner(null);
+          // Banner data exists but no image_url - keep existing banner if any
+          // Don't clear banner state to prevent flickering
         }
       } else {
-        // ไม่มี banner active → ใช้ default
-        setFlashSaleBanner(null);
+        // ไม่มี banner active → keep existing banner if any
+        // Don't clear banner state to prevent flickering
       }
     } catch (error) {
       console.error('Flash Sale Banner fetch error:', error);
-      setFlashSaleBanner(null);
+      // Don't clear banner state on error to prevent flickering
+      // Keep existing banner if any
     }
   }, []);
 
@@ -358,8 +362,7 @@ export default function NewHomePage() {
 
       setFlashSaleProducts(transformedProducts);
       
-      // Reset default countdown to 1 hour when fetching new Flash Sale products
-      setDefaultCountdown(3600);
+      // Removed default countdown reset
     } catch (err: any) {
       console.error('Flash Sale products fetch error:', err);
       setFlashSaleProducts([]);
@@ -463,7 +466,12 @@ export default function NewHomePage() {
         if (entry.isIntersecting && !isLoadingMore) {
           const canLoadMore = displayProducts.length > visibleCount;
           if (canLoadMore) {
-            loadMoreProducts();
+            // Call loadMoreProducts directly without including it in dependencies
+            setIsLoadingMore(true);
+            setTimeout(() => {
+              setVisibleCount((prev) => prev + 16);
+              setIsLoadingMore(false);
+            }, 300);
           }
         }
       },
@@ -474,14 +482,15 @@ export default function NewHomePage() {
       }
     );
 
-    observer.observe(loadMoreRef.current);
+    const currentRef = loadMoreRef.current;
+    observer.observe(currentRef);
 
     return () => {
-      if (loadMoreRef.current) {
-        observer.unobserve(loadMoreRef.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
-  }, [visibleCount, displayProducts.length, hasSearched, isLoadingMore, loadMoreProducts]);
+  }, [visibleCount, displayProducts.length, hasSearched, isLoadingMore]); // Removed loadMoreProducts from dependencies
 
   // Fetch products function
   const fetchProducts = async (categoryId?: number | 'all', tagIds?: number[] | 'all') => {
@@ -835,7 +844,11 @@ export default function NewHomePage() {
   }, []);
 
   useEffect(() => {
+    // Only sort if we have products and not searching
+    if (hasSearched) return; // Don't sort when searching
+    
     if (sortOption === 'price_asc' || sortOption === 'price_desc') {
+      if (displayProducts.length === 0) return; // Don't sort empty array
       const sorted = [...displayProducts].sort((a, b) => {
         if (sortOption === 'price_asc') {
           return (a.price || 0) - (b.price || 0);
@@ -843,29 +856,25 @@ export default function NewHomePage() {
           return (b.price || 0) - (a.price || 0);
         }
       });
-      setDisplayProducts(sorted);
+      // Only update if order actually changed
+      const hasChanged = sorted.some((item, index) => item.itemId !== displayProducts[index]?.itemId);
+      if (hasChanged) {
+        setDisplayProducts(sorted);
+      }
     } else if (sortOption === 'relevance') {
+      if (products.length === 0) return; // Don't shuffle empty array
       const shuffled = shuffleArray([...products]);
-      setDisplayProducts(shuffled);
+      // Only update if order actually changed
+      const hasChanged = shuffled.some((item, index) => item.itemId !== displayProducts[index]?.itemId);
+      if (hasChanged) {
+        setDisplayProducts(shuffled);
+      }
     }
-  }, [sortOption]);
+  }, [sortOption, hasSearched]); // Removed displayProducts and products from dependencies to prevent infinite loop
 
 
-  // Global timer tick (ใช้สำหรับ countdown รายสินค้า)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setNowSec(Math.floor(Date.now() / 1000));
-      // อัปเดต default countdown สำหรับสินค้าที่ไม่มี periodEndTime (ลดลงทุกวินาที)
-      setDefaultCountdown((prev) => {
-        if (prev <= 1) {
-          return 3600; // Reset to 1 hour when reaches 0
-        }
-        return prev - 1;
-      });
-    }, 1000); // Update every second
-
-    return () => clearInterval(timer);
-  }, []);
+  // Removed global timer tick to prevent continuous re-renders
+  // Countdown timer is now static - only shows initial time from database
 
   // ตรวจสอบว่ามีสินค้า Flash Sale เพิ่มเติมด้านล่างหรือไม่
   useEffect(() => {
@@ -1489,14 +1498,15 @@ export default function NewHomePage() {
           ) : flashSaleProducts.length > 0 ? (
             flashSaleProducts.map((product, index) => {
               const endTime = (product as any).periodEndTime || 0;
+              const nowSec = Math.floor(Date.now() / 1000);
               let remaining: number;
 
               if (endTime > 0 && endTime > nowSec) {
-                // ใช้เวลาจริงจากฐานข้อมูล (หน่วยวินาที)
+                // ใช้เวลาจริงจากฐานข้อมูล (หน่วยวินาที) - คำนวณครั้งเดียวตอน render
                 remaining = Math.max(endTime - nowSec, 0);
               } else {
-                // ถ้าไม่มีเวลาจริง หรือเวลาหมดแล้ว → ใช้ default countdown ที่ลดลงได้
-                remaining = defaultCountdown > 0 ? defaultCountdown : 3600;
+                // ถ้าไม่มีเวลาจริง หรือเวลาหมดแล้ว → ไม่แสดง countdown
+                remaining = 0;
               }
 
               // Debug log removed to prevent spam
@@ -1691,12 +1701,15 @@ export default function NewHomePage() {
               ) : flashSaleProducts.length > 0 ? (
                 flashSaleProducts.map((product, index) => {
                   const endTime = (product as any).periodEndTime || 0;
+                  const nowSec = Math.floor(Date.now() / 1000);
                   let remaining: number;
 
                   if (endTime > 0 && endTime > nowSec) {
+                    // ใช้เวลาจริงจากฐานข้อมูล (หน่วยวินาที) - คำนวณครั้งเดียวตอน render
                     remaining = Math.max(endTime - nowSec, 0);
                   } else {
-                    remaining = defaultCountdown > 0 ? defaultCountdown : 3600;
+                    // ถ้าไม่มีเวลาจริง หรือเวลาหมดแล้ว → ไม่แสดง countdown
+                    remaining = 0;
                   }
 
                   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import {
   Box,
   Image,
@@ -425,4 +425,20 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
   );
 };
 
-export default ModernProductCard;
+// Memoize component to prevent unnecessary re-renders when parent re-renders
+export default memo(ModernProductCard, (prevProps, nextProps) => {
+  // Only re-render if product data actually changed
+  return (
+    prevProps.product.itemId === nextProps.product.itemId &&
+    prevProps.product.price === nextProps.product.price &&
+    prevProps.product.priceMin === nextProps.product.priceMin &&
+    prevProps.product.priceMax === nextProps.product.priceMax &&
+    prevProps.product.productName === nextProps.product.productName &&
+    prevProps.product.imageUrl === nextProps.product.imageUrl &&
+    prevProps.product.ratingStar === nextProps.product.ratingStar &&
+    prevProps.product.priceDiscountRate === nextProps.product.priceDiscountRate &&
+    prevProps.product.commission === nextProps.product.commission &&
+    prevProps.product.shopType === nextProps.product.shopType &&
+    prevProps.product.fromShopee === nextProps.product.fromShopee
+  );
+});
