@@ -28,11 +28,19 @@ COPY . .
 
 # Build the application
 RUN echo "=== Starting Next.js Build ===" && \
-    npm run build && \
+    npm run build || { \
+        echo ""; \
+        echo "❌ Build failed with exit code: $?"; \
+        echo "Checking for build errors..."; \
+        exit 1; \
+    } && \
     echo "✅ Build command completed" && \
     echo "=== Verifying build output ===" && \
     echo "Checking .next directory:" && \
-    ls -la .next/ 2>/dev/null || (echo "❌ ERROR: .next directory not found!" && exit 1) && \
+    ls -la .next/ 2>/dev/null || { \
+        echo "❌ ERROR: .next directory not found!"; \
+        exit 1; \
+    } && \
     echo "" && \
     echo "Checking for standalone output:" && \
     if [ -d ".next/standalone" ]; then \
