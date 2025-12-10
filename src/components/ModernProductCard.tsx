@@ -48,7 +48,7 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
   }, []);
 
   // Handle Shop Now click for Shopee products
-  const handleShopNow = async (e: React.MouseEvent) => {
+  const handleShopNow = async (e: React.MouseEvent | React.TouchEvent) => {
     if (!product.fromShopee) {
       // Regular product - just open link
       return;
@@ -133,18 +133,48 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   };
 
+  // Handle card click for Shopee products
+  const handleCardClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // Don't trigger if clicking on button or other interactive elements
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'BUTTON' || target.closest('button')) {
+      return;
+    }
+    
+    if (product.fromShopee) {
+      handleShopNow(e);
+    } else {
+      window.open(product.offerLink, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   const isMall = product.shopType === '1';
   const rating = typeof product.ratingStar === 'string' ? parseFloat(product.ratingStar) || 0 : Number(product.ratingStar) || 0;
   const hasDiscount = product.priceDiscountRate && product.priceDiscountRate > 0;
   
   // Safe price calculations
-  const currentPrice = Number(product.priceMin || product.price || 0);
-  const discountRate = Number(product.priceDiscountRate || 0);
+  // Use priceMin if available and > 0, otherwise use price, fallback to priceMax
+  let currentPrice = 0;
+  if (product.priceMin && product.priceMin > 0) {
+    currentPrice = Number(product.priceMin);
+  } else if (product.price && product.price > 0) {
+    currentPrice = Number(product.price);
+  } else if (product.priceMax && product.priceMax > 0) {
+    currentPrice = Number(product.priceMax);
+  }
+  
+  // Only calculate discountRate if priceDiscountRate exists and is greater than 0
+  const discountRate = product.priceDiscountRate && product.priceDiscountRate > 0 ? Number(product.priceDiscountRate) : 0;
   
   // Only calculate original price after component is mounted
   let originalPrice = currentPrice;
-  if (mounted && hasDiscount && discountRate > 0) {
+  if (mounted && hasDiscount && discountRate > 0 && currentPrice > 0) {
     originalPrice = Math.ceil(currentPrice / (1 - discountRate / 100));
+  }
+  
+  // Don't render if price is 0 (invalid product)
+  if (currentPrice === 0) {
+    return null;
   }
   
   // Don't render anything until mounted to prevent hydration issues
@@ -165,7 +195,7 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </Box>
     );
   }
-  
+
   return (
     <Box
       bg="white"
@@ -185,6 +215,15 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
       h="full"
       w="full"
       role="group"
+      onClick={handleCardClick}
+      onTouchEnd={(e) => {
+        // For iOS Safari, ensure touch events work
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'BUTTON' || target.closest('button')) {
+          return;
+        }
+        handleCardClick(e);
+      }}
     >
       {/* Mall Badge */}
       {isMall && (
@@ -252,18 +291,30 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Content */}
       <Box p={{ base: 2.5, md: 2 }} display="flex" flexDirection="column" flexGrow={1} justifyContent="space-between">
         <VStack spacing={0} align="stretch">
-          <Text
-            fontSize={{ base: 'xs', md: 'xs' }}
-            color="gray.800"
-            noOfLines={2}
+          <Box
+            minH={{ base: '3.9rem', md: '3.6rem' }}
             mb={1}
-            minH={{ base: '2.5rem', md: '2rem' }}
-            lineHeight="1.3"
-            fontWeight="medium"
+            pr={{ base: 2, md: 2 }}
+            position="relative"
+            zIndex={1}
           >
-            {product.productName}
-          </Text>
-          
+            <Text
+              fontSize={{ base: 'xs', md: 'xs' }}
+              color="gray.800"
+              noOfLines={3}
+              lineHeight="1.3"
+              fontWeight="medium"
+              display="-webkit-box"
+              style={{
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {product.productName}
+            </Text>
+          </Box>
 
         </VStack>
 
@@ -338,10 +389,14 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
               _hover={{ bg: '#B91C1C', transform: 'translateY(-1px)', boxShadow: 'md' }}
               _active={{ bg: '#991B1B', transform: 'translateY(0)' }}
               transition="all 0.2s"
-              onClick={product.fromShopee ? handleShopNow : (e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                window.open(product.offerLink, '_blank', 'noopener,noreferrer');
+                if (product.fromShopee) {
+                  handleShopNow(e);
+                } else {
+                  window.open(product.offerLink, '_blank', 'noopener,noreferrer');
+                }
               }}
               disabled={isSaving}
               opacity={isSaving ? 0.7 : 1}

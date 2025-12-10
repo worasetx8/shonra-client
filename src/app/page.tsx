@@ -697,7 +697,11 @@ export default function NewHomePage() {
               const shopeeProducts = nodes
                 .filter((product: any) => {
                   // Only filter out products with missing essential fields
-                  return product.itemId && product.productName && product.imageUrl && product.offerLink;
+                  // Also check if product has valid price (price, priceMin, or priceMax > 0)
+                  const hasValidPrice = (product.price && product.price > 0) || 
+                                       (product.priceMin && product.priceMin > 0) || 
+                                       (product.priceMax && product.priceMax > 0);
+                  return product.itemId && product.productName && product.imageUrl && product.offerLink && hasValidPrice;
                 })
                 .map((product: any) => {
                   // Shopee API has both commissionRate and sellerCommissionRate
@@ -712,18 +716,44 @@ export default function NewHomePage() {
                   const commissionRateDecimal = commissionRateFromAPI > 0 ? commissionRateFromAPI : sellerCommissionRate;
                   const commissionRatePercent = commissionRateDecimal * 100; // Convert to percentage for display
                   
+                  // Use priceMin if price is 0 or undefined, otherwise use price
+                  // Try priceMin first, then price, then priceMax
+                  let displayPrice = 0;
+                  if (product.priceMin && product.priceMin > 0) {
+                    displayPrice = product.priceMin;
+                  } else if (product.price && product.price > 0) {
+                    displayPrice = product.price;
+                  } else if (product.priceMax && product.priceMax > 0) {
+                    displayPrice = product.priceMax;
+                  }
+                  
+                  // Skip products with no valid price
+                  if (displayPrice === 0) {
+                    return null;
+                  }
+                  
+                  // Calculate commission amount if not provided or is 0
+                  // Commission = price * commissionRate (in decimal)
+                  let commissionAmount = parseFloat(product.commission) || 0;
+                  if (commissionAmount === 0 && displayPrice > 0 && commissionRateDecimal > 0) {
+                    commissionAmount = displayPrice * commissionRateDecimal;
+                  }
+                  
+                  // Only include commission if it's greater than 0
+                  const commissionValue = commissionAmount > 0 ? commissionAmount : undefined;
+                  
                   return {
                     productName: product.productName || 'Unknown Product',
                     itemId: product.itemId || '',
-                    price: product.price || 0,
+                    price: displayPrice,
                     imageUrl: product.imageUrl || '',
                     offerLink: product.offerLink || '',
-                    priceMin: product.priceMin,
-                    priceMax: product.priceMax,
+                    priceMin: product.priceMin && product.priceMin > 0 ? product.priceMin : displayPrice,
+                    priceMax: product.priceMax && product.priceMax > 0 ? product.priceMax : displayPrice,
                     ratingStar: product.ratingStar || 0,
-                    priceDiscountRate: product.priceDiscountRate || 0,
+                    ...(product.priceDiscountRate && product.priceDiscountRate > 0 && { priceDiscountRate: product.priceDiscountRate }),
                     shopType: product.shopType,
-                    commission: product.commission || 0,
+                    ...(commissionValue !== undefined && { commission: commissionValue }),
                     commissionRate: commissionRatePercent, // Convert to percentage for display
                     shopName: product.shopName || 'Unknown Shop',
                     salesCount: product.sales || 0,
@@ -732,10 +762,10 @@ export default function NewHomePage() {
                     // Additional Shopee fields - include all fields from API
                     shopId: product.shopId,
                     productLink: product.productLink,
-                    sellerCommissionRate: sellerCommissionRate,
-                    shopeeCommissionRate: product.shopeeCommissionRate || 0,
+                    ...(sellerCommissionRate > 0 && { sellerCommissionRate: sellerCommissionRate }),
+                    ...(product.shopeeCommissionRate && product.shopeeCommissionRate > 0 && { shopeeCommissionRate: product.shopeeCommissionRate }),
                     // Store original commissionRate from API (decimal) for saving
-                    commissionRateOriginal: commissionRateDecimal, // Store as decimal for saving
+                    ...(commissionRateDecimal > 0 && { commissionRateOriginal: commissionRateDecimal }),
                     periodStartTime: product.periodStartTime || 0, // Include from API
                     periodEndTime: product.periodEndTime || 0, // Include from API
                     campaignActive: product.campaignActive !== undefined ? product.campaignActive : false, // Include from API if available
@@ -743,8 +773,10 @@ export default function NewHomePage() {
                 });
 
               
-              if (shopeeProducts.length > 0) {
-                setShopeeSearchResults(shopeeProducts);
+              // Filter out null values (products with invalid price)
+              const validProducts = shopeeProducts.filter((p: any) => p !== null);
+              if (validProducts.length > 0) {
+                setShopeeSearchResults(validProducts);
               } else {
                 setShopeeSearchResults([]);
               }
@@ -1234,7 +1266,7 @@ export default function NewHomePage() {
                     // ถ้ามี Shopee results → แสดง Shopee results (เพราะ query มาเพื่อเพิ่มเติม)
                     if (shopeeSearchResults.length > 0) {
                       return (
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-20 lg:pb-4">
                           {shopeeSearchResults.map((product) => (
                             <ModernProductCard key={product.itemId} product={product} />
                           ))}
@@ -1245,7 +1277,7 @@ export default function NewHomePage() {
                     // ถ้าไม่มี Shopee results → แสดง database results (ถ้ามี)
                     if (searchResults.length > 0) {
                       return (
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-20 lg:pb-4">
                           {searchResults.map((product) => (
                             <ModernProductCard key={product.itemId} product={product} />
                           ))}
@@ -1281,7 +1313,7 @@ export default function NewHomePage() {
 
                     return (
                       <>
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-20 lg:pb-4">
                           {visibleProducts.map((product) => (
                             <ModernProductCard key={product.itemId} product={product} />
                           ))}
