@@ -49,7 +49,7 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
   }, []);
 
   // Handle Shop Now click for Shopee products
-  const handleShopNow = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleShopNow = async (e: React.MouseEvent | React.TouchEvent) => {
     if (!product.fromShopee) {
       // Regular product - just open link
       return;
@@ -60,125 +60,115 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     if (isSaving) return;
 
-    // Use window.open() directly from user interaction context
-    // This avoids popup blocker and preserves cookies/tracking
-    // The link opens in a new tab/window, which is better for affiliate tracking
-    const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
+    // Open link immediately (synchronously) to avoid popup blocker on iOS
+    // Must be called in the same user gesture, before any async operations
+    const linkWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
     
-    // If popup was blocked, fallback to current window navigation
-    // This should rarely happen if called directly from user interaction
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      // Popup blocked - use current window navigation as fallback
+    // If popup was blocked, fallback to same-tab navigation
+    if (!linkWindow || linkWindow.closed || typeof linkWindow.closed === 'undefined') {
+      // Popup blocked - use same tab navigation instead
       window.location.href = product.offerLink;
-      return;
+      return; // Exit early since we're navigating away
     }
 
     setIsSaving(true);
     
-    // Save product to database (do this AFTER opening window)
-    // Backend uses commissionRate for commission_rate column
-    // commissionRate from Shopee API is already in decimal (0.1 = 10%)
-    // If we have commissionRateOriginal (from API), use it directly
-    // Otherwise, convert from percentage (if > 1) or use as decimal
-    const commissionRateOriginal = (product as any).commissionRateOriginal;
-    let commissionRateDecimal = 0;
-    
-    if (commissionRateOriginal !== undefined) {
-      // Use original commissionRate from Shopee API (already in decimal)
-      commissionRateDecimal = commissionRateOriginal;
-    } else {
-      // Fallback: convert from percentage if needed
-      const commissionRatePercent = product.commissionRate || 0;
-      commissionRateDecimal = commissionRatePercent > 1 ? commissionRatePercent / 100 : commissionRatePercent;
-    }
-    
-    const sellerCommissionRate = product.sellerCommissionRate !== undefined 
-      ? product.sellerCommissionRate 
-      : commissionRateDecimal; // Fallback to commissionRate
-    
-    // Use actual values from Shopee API if available, otherwise use defaults
-    const productData = {
-      itemId: product.itemId,
-      productName: product.productName,
-      shopName: product.shopName || '',
-      shopId: product.shopId || '',
-      price: product.price,
-      priceMin: product.priceMin,
-      priceMax: product.priceMax,
+    // Save product to database in background (don't wait for it)
+    // This prevents blocking the link opening
+    try {
+      // Save product to database
       // Backend uses commissionRate for commission_rate column
-      // Use commissionRate from Shopee API (already in decimal)
-      commissionRate: commissionRateDecimal, // Use commissionRate from API (decimal)
-      sellerCommissionRate: sellerCommissionRate,
-      shopeeCommissionRate: product.shopeeCommissionRate || 0,
-      commission: product.commission || 0,
-      imageUrl: product.imageUrl,
-      productLink: product.productLink || product.offerLink,
-      offerLink: product.offerLink,
-      ratingStar: product.ratingStar || 0,
-      sold: product.salesCount || 0,
-      discountRate: product.priceDiscountRate || 0,
-      // Use actual values from Shopee API response, not hardcoded 0
-      periodStartTime: product.periodStartTime !== undefined ? product.periodStartTime : 0,
-      periodEndTime: product.periodEndTime !== undefined ? product.periodEndTime : 0,
-      campaignActive: product.campaignActive !== undefined ? product.campaignActive : false,
-      is_flash_sale: false,
-    };
-
-    // Save product in background (window is already open)
-    fetch('/api/products/save-from-frontend', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(productData),
-    })
-    .then(async (saveResponse) => {
-      if (!saveResponse.ok) {
-        const errorText = await saveResponse.text();
-        console.error('Save product failed:', {
-          status: saveResponse.status,
-          statusText: saveResponse.statusText,
-          error: errorText
-        });
+      // commissionRate from Shopee API is already in decimal (0.1 = 10%)
+      // If we have commissionRateOriginal (from API), use it directly
+      // Otherwise, convert from percentage (if > 1) or use as decimal
+      const commissionRateOriginal = (product as any).commissionRateOriginal;
+      let commissionRateDecimal = 0;
+      
+      if (commissionRateOriginal !== undefined) {
+        // Use original commissionRate from Shopee API (already in decimal)
+        commissionRateDecimal = commissionRateOriginal;
       } else {
-        const result = await saveResponse.json();
-        console.log('Product saved successfully:', result);
+        // Fallback: convert from percentage if needed
+        const commissionRatePercent = product.commissionRate || 0;
+        commissionRateDecimal = commissionRatePercent > 1 ? commissionRatePercent / 100 : commissionRatePercent;
       }
-    })
-    .catch((error) => {
-      console.error('Error saving product:', error);
-      if (error instanceof Error) {
-        console.error('Error details:', {
-          message: error.message,
-          stack: error.stack
-        });
-      }
-    })
-    .finally(() => {
+      
+      const sellerCommissionRate = product.sellerCommissionRate !== undefined 
+        ? product.sellerCommissionRate 
+        : commissionRateDecimal; // Fallback to commissionRate
+      
+      // Use actual values from Shopee API if available, otherwise use defaults
+      const productData = {
+        itemId: product.itemId,
+        productName: product.productName,
+        shopName: product.shopName || '',
+        shopId: product.shopId || '',
+        price: product.price,
+        priceMin: product.priceMin,
+        priceMax: product.priceMax,
+        // Backend uses commissionRate for commission_rate column
+        // Use commissionRate from Shopee API (already in decimal)
+        commissionRate: commissionRateDecimal, // Use commissionRate from API (decimal)
+        sellerCommissionRate: sellerCommissionRate,
+        shopeeCommissionRate: product.shopeeCommissionRate || 0,
+        commission: product.commission || 0,
+        imageUrl: product.imageUrl,
+        productLink: product.productLink || product.offerLink,
+        offerLink: product.offerLink,
+        ratingStar: product.ratingStar || 0,
+        sold: product.salesCount || 0,
+        discountRate: product.priceDiscountRate || 0,
+        // Use actual values from Shopee API response, not hardcoded 0
+        periodStartTime: product.periodStartTime !== undefined ? product.periodStartTime : 0,
+        periodEndTime: product.periodEndTime !== undefined ? product.periodEndTime : 0,
+        campaignActive: product.campaignActive !== undefined ? product.campaignActive : false,
+        is_flash_sale: false,
+      };
+
+      // Save in background - don't await, just fire and forget
+      // This prevents blocking the link opening and avoids popup blocker issues
+      fetch('/api/products/save-from-frontend', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
+      }).then((saveResponse) => {
+        if (!saveResponse.ok) {
+          console.error('Save product failed:', {
+            status: saveResponse.status,
+            statusText: saveResponse.statusText,
+          });
+        } else {
+          console.log('Product saved successfully');
+        }
+        setIsSaving(false);
+      }).catch((error) => {
+        console.error('Error saving product:', error);
+        setIsSaving(false);
+      });
+    } catch (error) {
+      console.error('Error preparing product data:', error);
       setIsSaving(false);
-    });
+    }
   };
 
-  // Handle card click for Shopee products (mouse events)
-  const handleCardClick = (e: React.MouseEvent) => {
+  // Handle card click for Shopee products
+  const handleCardClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent default behavior to avoid double navigation
+    e.preventDefault();
+    e.stopPropagation();
+    
     // Don't trigger if clicking on button or other interactive elements
     const target = e.target as HTMLElement;
     if (target.tagName === 'BUTTON' || target.closest('button')) {
       return;
     }
     
-    // Prevent default behavior to avoid double navigation
-    e.preventDefault();
-    e.stopPropagation();
-    
     if (product.fromShopee) {
       handleShopNow(e);
     } else {
-      // For non-Shopee products, use window.open() directly
-      const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
-      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-        window.location.href = product.offerLink;
-      }
+      window.open(product.offerLink, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -191,57 +181,27 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
     };
   };
 
-  // Handle touch move to detect scrolling
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartRef.current) return;
-    
-    const touch = e.touches[0];
-    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
-    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
-    
-    // If movement is more than 10px, mark as scrolling
-    if (deltaX > 10 || deltaY > 10) {
-      // Reset touch start to prevent click on touch end
-      touchStartRef.current = null;
-    }
-  };
-
   // Handle touch end - only trigger click if it wasn't a scroll
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStartRef.current) {
-      // Was a scroll, don't trigger click
-      return;
-    }
+    if (!touchStartRef.current) return;
 
     const touch = e.changedTouches[0];
     const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
     const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
     
-    // Reset touch start
-    touchStartRef.current = null;
-    
     // If movement is more than 10px, consider it a scroll, not a tap
     const isScroll = deltaX > 10 || deltaY > 10;
     
+    // Reset touch start
+    touchStartRef.current = null;
+
     // Only trigger click if it wasn't a scroll
     if (!isScroll) {
-      // Don't trigger if clicking on button or other interactive elements
       const target = e.target as HTMLElement;
       if (target.tagName === 'BUTTON' || target.closest('button')) {
         return;
       }
-      
-      // Trigger action immediately (must be in user interaction context to avoid popup blocker)
-      // Don't use setTimeout as it breaks the user interaction context
-      if (product.fromShopee) {
-        handleShopNow(e);
-      } else {
-        // For non-Shopee products, use window.open() directly
-        const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
-        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-          window.location.href = product.offerLink;
-        }
-      }
+      handleCardClick(e);
     }
   };
 
@@ -314,7 +274,6 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
       role="group"
       onClick={handleCardClick}
       onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       {/* Mall Badge */}
@@ -487,11 +446,7 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 if (product.fromShopee) {
                   handleShopNow(e);
                 } else {
-                  // For non-Shopee products, use window.open() directly
-                  const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
-                  if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-                    window.location.href = product.offerLink;
-                  }
+                  window.open(product.offerLink, '_blank', 'noopener,noreferrer');
                 }
               }}
               disabled={isSaving}
@@ -504,6 +459,8 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </Box>
         </VStack>
       </Box>
+      
+      {/* Removed hidden link to prevent double-click issue on mobile */}
     </Box>
   );
 };
