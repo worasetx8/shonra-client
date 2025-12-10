@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendUrl } from "@/lib/api-utils";
 
+export const dynamic = 'force-dynamic';
+
 // GET: Fetch all active categories
 export async function GET(request: NextRequest) {
   try {

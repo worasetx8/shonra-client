@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendUrl, getAuthToken, createAuthHeaders, validateAuth } from "@/lib/api-utils";
 
+export const dynamic = 'force-dynamic';
+
 // PUT - เปลี่ยนสถานะแอดมิน
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {

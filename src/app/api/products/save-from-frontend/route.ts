@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendUrl } from "@/lib/api-utils";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Save product from frontend (public endpoint, no auth required)
  * This endpoint is used when users click "Shop Now" on Shopee products

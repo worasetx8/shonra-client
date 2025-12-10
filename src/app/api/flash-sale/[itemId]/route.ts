@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendUrl } from "@/lib/api-utils";
 
+export const dynamic = 'force-dynamic';
+
 // POST & PUT: Toggle Flash Sale status (support both methods)
 export async function POST(request: NextRequest, { params }: { params: { itemId: string } }) {
   return handleFlashSaleToggle(request, { params });
