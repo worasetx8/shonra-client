@@ -3,8 +3,11 @@ version: '3.8'
 services:
   # Frontend - Next.js Client (Customer-facing website)
   frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: shonra-frontend
-    image: shonra-client:latest
+    image: shonra-frontend:latest
     env_file:
       - stack.env
     restart: always
