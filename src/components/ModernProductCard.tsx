@@ -130,7 +130,6 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
       }
 
       const result = await saveResponse.json();
-      console.log('Product saved successfully:', result);
 
       // Open affiliate link in new tab
       window.open(product.offerLink, '_blank', 'noopener,noreferrer');
@@ -150,8 +149,8 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   };
 
-  // Handle card click for Shopee products
-  const handleCardClick = (e: React.MouseEvent | React.TouchEvent) => {
+  // Handle card click for Shopee products (mouse events)
+  const handleCardClick = (e: React.MouseEvent) => {
     // Prevent default behavior to avoid double navigation
     e.preventDefault();
     e.stopPropagation();
@@ -178,27 +177,56 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
     };
   };
 
+  // Handle touch move to detect scrolling
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+    
+    // If movement is more than 10px, mark as scrolling
+    if (deltaX > 10 || deltaY > 10) {
+      // Reset touch start to prevent click on touch end
+      touchStartRef.current = null;
+    }
+  };
+
   // Handle touch end - only trigger click if it wasn't a scroll
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStartRef.current) return;
+    if (!touchStartRef.current) {
+      // Was a scroll, don't trigger click
+      return;
+    }
 
     const touch = e.changedTouches[0];
     const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
     const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
     
+    // Reset touch start
+    touchStartRef.current = null;
+    
     // If movement is more than 10px, consider it a scroll, not a tap
     const isScroll = deltaX > 10 || deltaY > 10;
     
-    // Reset touch start
-    touchStartRef.current = null;
-
     // Only trigger click if it wasn't a scroll
     if (!isScroll) {
+      // Don't trigger if clicking on button or other interactive elements
       const target = e.target as HTMLElement;
       if (target.tagName === 'BUTTON' || target.closest('button')) {
         return;
       }
-      handleCardClick(e);
+      
+      // For iOS Safari, don't prevent default as it may block the action
+      // Use setTimeout to ensure the action executes after touch event completes
+      setTimeout(() => {
+        // Trigger the action directly without preventDefault
+        if (product.fromShopee) {
+          handleShopNow(e);
+        } else {
+          window.open(product.offerLink, '_blank', 'noopener,noreferrer');
+        }
+      }, 50); // Small delay to ensure touch event completes
     }
   };
 
@@ -271,6 +299,7 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
       role="group"
       onClick={handleCardClick}
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       {/* Mall Badge */}
@@ -437,7 +466,7 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
               _hover={{ bg: '#B91C1C', transform: 'translateY(-1px)', boxShadow: 'md' }}
               _active={{ bg: '#991B1B', transform: 'translateY(0)' }}
               transition="all 0.2s"
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
                 if (product.fromShopee) {
