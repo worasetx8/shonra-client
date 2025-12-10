@@ -136,6 +136,10 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   // Handle card click for Shopee products
   const handleCardClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent default behavior to avoid double navigation
+    e.preventDefault();
+    e.stopPropagation();
+    
     // Don't trigger if clicking on button or other interactive elements
     const target = e.target as HTMLElement;
     if (target.tagName === 'BUTTON' || target.closest('button')) {
@@ -437,18 +441,7 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </VStack>
       </Box>
       
-      {/* Hidden link for functionality (only for non-Shopee products) */}
-      {!product.fromShopee && (
-        <Box
-          as="a"
-          href={product.offerLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          position="absolute"
-          inset={0}
-          zIndex={0}
-        />
-      )}
+      {/* Removed hidden link to prevent double-click issue on mobile */}
     </Box>
   );
 };
