@@ -1151,7 +1151,7 @@ export default function NewHomePage() {
           {/* Desktop Logo */}
           <div className="hidden lg:flex items-center gap-4">
             <h2 className="text-white font-bold text-lg">
-              {activeCategory === 'all' ? 'All' : categories.find(c => c.id === activeCategory)?.name || 'All'}
+              {activeCategory === 'all' ? 'All Items' : categories.find(c => c.id === activeCategory)?.name || 'All Items'}
             </h2>
           </div>
 
