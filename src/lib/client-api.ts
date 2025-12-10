@@ -88,3 +88,15 @@ export async function fetchFlashSaleProducts(params: {
 export async function fetchBanners(positionName: string) {
   return fetchFromBackend(`/api/banners/public/${encodeURIComponent(positionName)}`);
 }
+
+/**
+ * Search Shopee products from backend
+ */
+export async function searchShopeeProducts(params: {
+  page?: string;
+  search?: string;
+  commissionRate?: string;
+  ratingStar?: string;
+}) {
+  return fetchFromBackend('/api/shopee/search', { params });
+}

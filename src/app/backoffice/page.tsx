@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import * as ClientAPI from '@/lib/client-api';
 import {
   Box,
   Container,
@@ -119,20 +120,12 @@ export default function BackofficeProductManagement() {
         });
       }, 200);
       
-      const params = new URLSearchParams({
+      const data = await ClientAPI.searchShopeeProducts({
         page: page.toString(),
         search: searchFilters.productName,
         commissionRate: searchFilters.commissionRate.toString(),
         ratingStar: searchFilters.ratingStar.toString()
       });
-
-      const response = await fetch('/api/shopee?' + params);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-
-      const data = await response.json();
       
       if (data.errors) {
         throw new Error(data.errors[0]?.message || 'Error fetching products');
