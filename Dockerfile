@@ -14,37 +14,15 @@ ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_ENABLE_AI_SEO=${NEXT_PUBLIC_ENABLE_AI_SEO}
 ENV NODE_ENV=production
 
-# Install build dependencies for native modules
-RUN apk add --no-cache python3 make g++
-
 # Copy package files and install dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps --include=dev --loglevel=error
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
 
-# Clean any build artifacts
-RUN rm -rf .next node_modules/.cache
-
 # Build the application
-RUN echo "=== Starting Next.js build ===" && \
-    NODE_OPTIONS="--max-old-space-size=4096" npm run build || { \
-        echo ""; \
-        echo "❌ Build failed!"; \
-        echo "Check the output above for error messages."; \
-        exit 1; \
-    }
-
-# Verify build output
-RUN echo "=== Verifying build output ===" && \
-    test -d /app/.next/standalone || (echo "❌ ERROR: .next/standalone not found!" && exit 1) && \
-    test -d /app/.next/static || (echo "❌ ERROR: .next/static not found!" && exit 1) && \
-    test -f /app/.next/standalone/server.js || (echo "❌ ERROR: server.js not found!" && exit 1) && \
-    echo "✅ Build verification passed" && \
-    echo "Standalone folder contents:" && \
-    ls -la /app/.next/standalone/ | head -10 && \
-    echo "Static folder exists: $(ls -la /app/.next/static/ | wc -l) files"
+RUN npm run build
 
 # Production Stage
 FROM node:20.15.1-alpine AS runner
@@ -60,15 +38,8 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copy necessary files from build stage
 # Next.js standalone output includes only necessary files
 # The standalone folder contains server.js and node_modules
-
-# Copy public folder
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
-
-# Copy standalone output (required)
 COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
-
-# Copy static files (required for Next.js)
-# Note: .next/static must exist after build, if not the build failed
 COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Permissions are set via --chown in COPY commands above
