@@ -28,50 +28,77 @@ COPY . .
 
 # Build the application
 RUN echo "=== Starting Next.js Build ===" && \
-    npm run build || { \
+    echo "Node version: $(node --version)" && \
+    echo "NPM version: $(npm --version)" && \
+    echo "Current directory: $(pwd)" && \
+    echo "Files in /app:" && \
+    ls -la /app/ | head -20 && \
+    echo "" && \
+    echo "=== Running npm run build ===" && \
+    npm run build > /tmp/build.log 2>&1; \
+    BUILD_EXIT_CODE=$?; \
+    if [ $BUILD_EXIT_CODE -ne 0 ]; then \
         echo ""; \
-        echo "❌ Build failed with exit code: $?"; \
-        echo "Checking for build errors..."; \
-        exit 1; \
-    } && \
-    echo "✅ Build command completed" && \
+        echo "❌ Build failed with exit code: $BUILD_EXIT_CODE"; \
+        echo "=== Full Build Log ==="; \
+        cat /tmp/build.log; \
+        echo ""; \
+        echo "=== Checking for errors ==="; \
+        grep -i "error" /tmp/build.log | head -50 || echo "No 'error' keyword found"; \
+        exit $BUILD_EXIT_CODE; \
+    fi && \
+    echo "" && \
+    echo "✅ Build command completed successfully" && \
     echo "=== Verifying build output ===" && \
     echo "Checking .next directory:" && \
-    ls -la .next/ 2>/dev/null || { \
+    if [ ! -d ".next" ]; then \
         echo "❌ ERROR: .next directory not found!"; \
+        echo "Build log summary:"; \
+        tail -50 /tmp/build.log; \
         exit 1; \
-    } && \
+    fi && \
+    ls -la .next/ && \
     echo "" && \
     echo "Checking for standalone output:" && \
     if [ -d ".next/standalone" ]; then \
         echo "✅ Standalone directory found"; \
+        echo "Standalone directory structure:"; \
         ls -la .next/standalone/; \
         echo ""; \
         if [ -f ".next/standalone/server.js" ]; then \
             echo "✅ server.js found"; \
+            echo "File size: $(ls -lh .next/standalone/server.js | awk '{print $5}')"; \
         else \
             echo "❌ ERROR: server.js not found in standalone!"; \
             echo "Contents of standalone directory:"; \
-            find .next/standalone -type f | head -20; \
+            find .next/standalone -type f | head -30; \
+            echo ""; \
+            echo "Looking for server files:"; \
+            find .next/standalone -name "server.*" -o -name "*.js" | head -20; \
             exit 1; \
         fi; \
     else \
         echo "❌ ERROR: .next/standalone directory not found!"; \
         echo ""; \
-        echo "Diagnostics:"; \
+        echo "=== Diagnostics ==="; \
         echo "1. Checking next.config.js:"; \
         cat next.config.js | grep -i "output" || echo "   ⚠️ No output config found"; \
         echo ""; \
         echo "2. Checking Next.js version:"; \
-        npm list next || echo "   ⚠️ Could not check version"; \
+        npm list next 2>&1 | head -5 || echo "   ⚠️ Could not check version"; \
         echo ""; \
         echo "3. .next directory contents:"; \
         ls -la .next/ || echo "   ⚠️ Cannot list .next directory"; \
         echo ""; \
         echo "4. Looking for any build artifacts:"; \
-        find .next -type f -name "*.js" 2>/dev/null | head -10 || echo "   ⚠️ No JS files found"; \
+        find .next -type f -name "*.js" 2>/dev/null | head -20 || echo "   ⚠️ No JS files found"; \
+        echo ""; \
+        echo "5. Build log summary:"; \
+        tail -50 /tmp/build.log; \
         exit 1; \
-    fi
+    fi && \
+    echo "" && \
+    echo "✅ Build verification completed successfully"
 
 # Production Stage
 FROM node:20.15.1-alpine AS runner
