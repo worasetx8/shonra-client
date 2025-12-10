@@ -1,6 +1,6 @@
 import { Providers } from './providers';
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { getBackendUrl } from '@/lib/api-utils';
 
 const DEFAULT_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://shonra.com';
@@ -134,11 +134,6 @@ export async function generateMetadata(): Promise<Metadata> {
         'max-snippet': -1,
       },
     },
-    viewport: {
-      width: 'device-width',
-      initialScale: 1,
-      maximumScale: 5,
-    },
     verification: {
       ...(seoSettings.googleVerification && { google: seoSettings.googleVerification }),
       ...(seoSettings.bingVerification && { other: { 'msvalidate.01': seoSettings.bingVerification } }),
@@ -148,6 +143,13 @@ export async function generateMetadata(): Promise<Metadata> {
     },
   };
 }
+
+// Export viewport separately (Next.js 14+ requirement)
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export default function RootLayout({
   children,
