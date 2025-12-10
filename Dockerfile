@@ -26,54 +26,42 @@ RUN npm install --legacy-peer-deps --verbose || npm ci
 # Copy source code
 COPY . .
 
-# Build the application with error handling
+# Build the application
 RUN echo "=== Starting Next.js Build ===" && \
-    npm run build 2>&1 | tee /tmp/build.log || { \
-        echo ""; \
-        echo "❌ Build failed!"; \
-        echo "=== Last 100 lines of build log ==="; \
-        tail -100 /tmp/build.log || cat /tmp/build.log; \
-        echo ""; \
-        echo "=== Checking for common errors ==="; \
-        grep -i "error" /tmp/build.log | tail -20 || echo "No 'error' found in log"; \
-        exit 1; \
-    } && \
-    echo "✅ Build completed successfully" && \
-    echo "=== Checking build output ===" && \
-    if [ ! -d ".next" ]; then \
-        echo "❌ ERROR: .next directory not found after build!"; \
-        exit 1; \
-    fi && \
-    ls -la .next/ && \
+    npm run build && \
+    echo "✅ Build command completed" && \
+    echo "=== Verifying build output ===" && \
+    echo "Checking .next directory:" && \
+    ls -la .next/ 2>/dev/null || (echo "❌ ERROR: .next directory not found!" && exit 1) && \
     echo "" && \
-    echo "=== Checking for standalone output ===" && \
+    echo "Checking for standalone output:" && \
     if [ -d ".next/standalone" ]; then \
-        echo "✅ Standalone output found"; \
-        echo "Standalone directory contents:"; \
+        echo "✅ Standalone directory found"; \
         ls -la .next/standalone/; \
         echo ""; \
         if [ -f ".next/standalone/server.js" ]; then \
-            echo "✅ server.js found in standalone"; \
+            echo "✅ server.js found"; \
         else \
             echo "❌ ERROR: server.js not found in standalone!"; \
+            echo "Contents of standalone directory:"; \
+            find .next/standalone -type f | head -20; \
             exit 1; \
         fi; \
     else \
-        echo "❌ ERROR: Standalone output not found!"; \
+        echo "❌ ERROR: .next/standalone directory not found!"; \
         echo ""; \
-        echo "This usually means:"; \
-        echo "1. next.config.js is missing 'output: standalone'"; \
-        echo "2. Next.js version doesn't support standalone output"; \
-        echo "3. Build failed silently"; \
+        echo "Diagnostics:"; \
+        echo "1. Checking next.config.js:"; \
+        cat next.config.js | grep -i "output" || echo "   ⚠️ No output config found"; \
         echo ""; \
-        echo "Checking next.config.js:"; \
-        grep -i "output" next.config.js 2>/dev/null || echo "⚠️ next.config.js not found or no output config"; \
+        echo "2. Checking Next.js version:"; \
+        npm list next || echo "   ⚠️ Could not check version"; \
         echo ""; \
-        echo "Checking Next.js version:"; \
-        npm list next 2>/dev/null | grep next || echo "⚠️ Could not determine Next.js version"; \
+        echo "3. .next directory contents:"; \
+        ls -la .next/ || echo "   ⚠️ Cannot list .next directory"; \
         echo ""; \
-        echo "Checking .next directory structure:"; \
-        find .next -type f -name "*.js" | head -10 || echo "No JS files found"; \
+        echo "4. Looking for any build artifacts:"; \
+        find .next -type f -name "*.js" 2>/dev/null | head -10 || echo "   ⚠️ No JS files found"; \
         exit 1; \
     fi
 
