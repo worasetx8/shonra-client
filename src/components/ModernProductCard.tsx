@@ -43,31 +43,13 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [mounted, setMounted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const linkRef = useRef<HTMLAnchorElement>(null);
   
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Helper function to open link using hidden <a> tag (avoids popup blocker and preserves cookies)
-  const openLink = (url: string) => {
-    if (linkRef.current) {
-      linkRef.current.href = url;
-      linkRef.current.click();
-    } else {
-      // Fallback: create temporary <a> tag
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
   // Handle Shop Now click for Shopee products
-  const handleShopNow = async (e: React.MouseEvent | React.TouchEvent) => {
+  const handleShopNow = (e: React.MouseEvent | React.TouchEvent) => {
     if (!product.fromShopee) {
       // Regular product - just open link
       return;
@@ -78,9 +60,18 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     if (isSaving) return;
 
-    // Use hidden <a> tag to open link (avoids popup blocker and preserves cookies/tracking)
-    // This method works on both mobile and desktop
-    openLink(product.offerLink);
+    // Use window.open() directly from user interaction context
+    // This avoids popup blocker and preserves cookies/tracking
+    // The link opens in a new tab/window, which is better for affiliate tracking
+    const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
+    
+    // If popup was blocked, fallback to current window navigation
+    // This should rarely happen if called directly from user interaction
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      // Popup blocked - use current window navigation as fallback
+      window.location.href = product.offerLink;
+      return;
+    }
 
     setIsSaving(true);
     
@@ -183,8 +174,11 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
     if (product.fromShopee) {
       handleShopNow(e);
     } else {
-      // For non-Shopee products, use same method as Shopee products
-      openLink(product.offerLink);
+      // For non-Shopee products, use window.open() directly
+      const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        window.location.href = product.offerLink;
+      }
     }
   };
 
@@ -242,8 +236,11 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
       if (product.fromShopee) {
         handleShopNow(e);
       } else {
-        // For non-Shopee products, use same method as Shopee products
-        openLink(product.offerLink);
+        // For non-Shopee products, use window.open() directly
+        const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          window.location.href = product.offerLink;
+        }
       }
     }
   };
@@ -490,8 +487,11 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 if (product.fromShopee) {
                   handleShopNow(e);
                 } else {
-                  // For non-Shopee products, use same method as Shopee products
-                  openLink(product.offerLink);
+                  // For non-Shopee products, use window.open() directly
+                  const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
+                  if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                    window.location.href = product.offerLink;
+                  }
                 }
               }}
               disabled={isSaving}
@@ -504,21 +504,6 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </Box>
         </VStack>
       </Box>
-      
-      {/* Hidden <a> tag for opening links (avoids popup blocker and preserves cookies/tracking) */}
-      <Box
-        as="a"
-        ref={linkRef}
-        href={product.offerLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        position="absolute"
-        opacity={0}
-        pointerEvents="none"
-        aria-hidden="true"
-        tabIndex={-1}
-        style={{ width: 0, height: 0, overflow: 'hidden' }}
-      />
     </Box>
   );
 };
