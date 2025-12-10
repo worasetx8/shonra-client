@@ -1,27 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendUrl, createDefaultHeaders } from "@/lib/api-utils";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 // GET: Fetch all active categories
 export async function GET(request: NextRequest) {
   try {
     // Check if this is a hard refresh (F5) - browser sends Cache-Control: no-cache or Pragma: no-cache
-    const cacheControl = request.headers.get('cache-control');
-    const pragma = request.headers.get('pragma');
-    const isHardRefresh = cacheControl?.includes('no-cache') || pragma === 'no-cache';
+    const cacheControl = request.headers.get("cache-control");
+    const pragma = request.headers.get("pragma");
+    const isHardRefresh = cacheControl?.includes("no-cache") || pragma === "no-cache";
 
     const BACKEND_URL = getBackendUrl();
     const response = await fetch(`${BACKEND_URL}/api/categories/public`, {
       method: "GET",
       headers: createDefaultHeaders(),
       // If hard refresh, bypass cache. Otherwise, use Next.js Data Cache for 5 minutes
-      ...(isHardRefresh ? { cache: 'no-store' } : {
-        next: { 
-          revalidate: 300, // Revalidate every 5 minutes
-          tags: ['categories'] // Tag for manual revalidation
-        }
-      })
+      ...(isHardRefresh
+        ? { cache: "no-store" }
+        : {
+            next: {
+              revalidate: 300, // Revalidate every 5 minutes
+              tags: ["categories"] // Tag for manual revalidation
+            }
+          })
     });
 
     if (!response.ok) {
@@ -29,14 +31,14 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    
+
     // Cache-Control: Use stale-while-revalidate pattern for normal requests
     // For hard refresh, set no-cache to prevent browser caching
     return NextResponse.json(data, {
       headers: {
-        'Cache-Control': isHardRefresh 
-          ? 'no-cache, no-store, must-revalidate' 
-          : 'public, s-maxage=300, stale-while-revalidate=600',
+        "Cache-Control": isHardRefresh
+          ? "no-cache, no-store, must-revalidate"
+          : "public, s-maxage=300, stale-while-revalidate=600"
       }
     });
   } catch (error) {
@@ -51,4 +53,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

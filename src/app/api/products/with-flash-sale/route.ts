@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendUrl } from "@/lib/api-utils";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 // GET: Fetch all products with Flash Sale status
 export async function GET(request: NextRequest) {

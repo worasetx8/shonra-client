@@ -1,5 +1,5 @@
-import { NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
+import { NextRequest } from "next/server";
+import { cookies } from "next/headers";
 
 /**
  * Get backend URL from environment variable
@@ -8,17 +8,15 @@ import { cookies } from 'next/headers';
  */
 export function getBackendUrl(): string {
   // Server-side: Use BACKEND_URL or internal Docker network name
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     // Running in Node.js (server-side)
     // Try BACKEND_URL first (for Docker internal network)
     // Fallback to NEXT_PUBLIC_BACKEND_URL (for public URL)
     // Last fallback to internal Docker network name
-    return process.env.BACKEND_URL || 
-           process.env.NEXT_PUBLIC_BACKEND_URL || 
-           'https://api.shonra.com'; // Public URL as fallback
+    return process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "https://api.shonra.com"; // Public URL as fallback
   }
   // Client-side: Use NEXT_PUBLIC_BACKEND_URL
-  return process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002';
+  return process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 }
 
 /**
@@ -27,14 +25,14 @@ export function getBackendUrl(): string {
  */
 export function createDefaultHeaders(additionalHeaders?: HeadersInit): HeadersInit {
   const defaultHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
-    'User-Agent': 'SHONRA-Frontend/1.0',
+    "Content-Type": "application/json",
+    "User-Agent": "SHONRA-Frontend/1.0"
   };
-  
+
   if (additionalHeaders) {
     return { ...defaultHeaders, ...additionalHeaders };
   }
-  
+
   return defaultHeaders;
 }
 
@@ -44,8 +42,7 @@ export function createDefaultHeaders(additionalHeaders?: HeadersInit): HeadersIn
  */
 export function getAuthToken(request: NextRequest): string | null {
   const cookieStore = cookies();
-  const token = cookieStore.get('auth-token')?.value || 
-                request.headers.get('Authorization')?.replace('Bearer ', '');
+  const token = cookieStore.get("auth-token")?.value || request.headers.get("Authorization")?.replace("Bearer ", "");
   return token || null;
 }
 
@@ -55,9 +52,9 @@ export function getAuthToken(request: NextRequest): string | null {
  */
 export function createAuthHeaders(token: string): HeadersInit {
   return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-    'User-Agent': 'SHONRA-Frontend/1.0',
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+    "User-Agent": "SHONRA-Frontend/1.0"
   };
 }
 
@@ -66,6 +63,5 @@ export function createAuthHeaders(token: string): HeadersInit {
  * @returns true if token exists, false otherwise
  */
 export function validateAuth(token: string | null): boolean {
-  return token !== null && token.trim() !== '';
+  return token !== null && token.trim() !== "";
 }
-

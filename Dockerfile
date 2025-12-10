@@ -30,10 +30,10 @@ RUN rm -rf .next node_modules/.cache
 # Build the application
 RUN echo "=== Starting Next.js build ===" && \
     NODE_OPTIONS="--max-old-space-size=4096" npm run build || { \
-        echo ""; \
-        echo "❌ Build failed!"; \
-        echo "Check the output above for error messages."; \
-        exit 1; \
+    echo ""; \
+    echo "❌ Build failed!"; \
+    echo "Check the output above for error messages."; \
+    exit 1; \
     }
 
 # Verify build output

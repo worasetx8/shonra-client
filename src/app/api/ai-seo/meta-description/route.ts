@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getBackendUrl } from '@/lib/api-utils';
+import { NextRequest, NextResponse } from "next/server";
+import { getBackendUrl } from "@/lib/api-utils";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,11 +9,11 @@ export async function POST(request: NextRequest) {
     const BACKEND_URL = getBackendUrl();
 
     const response = await fetch(`${BACKEND_URL}/api/ai-seo/meta-description`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json"
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(body)
     });
 
     const data = await response.json();
@@ -22,12 +22,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: 'Failed to generate meta description',
-        error: error.message,
+        message: "Failed to generate meta description",
+        error: error.message
       },
       { status: 500 }
     );
   }
 }
-
-

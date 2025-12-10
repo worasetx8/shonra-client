@@ -3,7 +3,7 @@
  * Use these functions in React components (client-side only)
  */
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
 interface FetchOptions extends RequestInit {
   params?: Record<string, string>;
@@ -14,9 +14,9 @@ interface FetchOptions extends RequestInit {
  */
 export async function fetchFromBackend(endpoint: string, options: FetchOptions = {}) {
   const { params, ...fetchOptions } = options;
-  
+
   let url = `${BACKEND_URL}${endpoint}`;
-  
+
   if (params) {
     const searchParams = new URLSearchParams(params);
     url += `?${searchParams.toString()}`;
@@ -25,9 +25,9 @@ export async function fetchFromBackend(endpoint: string, options: FetchOptions =
   const response = await fetch(url, {
     ...fetchOptions,
     headers: {
-      'Content-Type': 'application/json',
-      ...fetchOptions.headers,
-    },
+      "Content-Type": "application/json",
+      ...fetchOptions.headers
+    }
   });
 
   if (!response.ok) {
@@ -41,21 +41,21 @@ export async function fetchFromBackend(endpoint: string, options: FetchOptions =
  * Fetch settings from backend
  */
 export async function fetchSettings() {
-  return fetchFromBackend('/api/settings');
+  return fetchFromBackend("/api/settings");
 }
 
 /**
  * Fetch categories from backend
  */
 export async function fetchCategories() {
-  return fetchFromBackend('/api/categories/public');
+  return fetchFromBackend("/api/categories/public");
 }
 
 /**
  * Fetch tags from backend
  */
 export async function fetchTags() {
-  return fetchFromBackend('/api/tags/public');
+  return fetchFromBackend("/api/tags/public");
 }
 
 /**
@@ -69,17 +69,14 @@ export async function fetchProducts(params: {
   search?: string;
   status?: string;
 }) {
-  return fetchFromBackend('/api/products/public', { params });
+  return fetchFromBackend("/api/products/public", { params });
 }
 
 /**
  * Fetch flash sale products
  */
-export async function fetchFlashSaleProducts(params: {
-  page?: string;
-  limit?: string;
-}) {
-  return fetchFromBackend('/api/products/flash-sale', { params });
+export async function fetchFlashSaleProducts(params: { page?: string; limit?: string }) {
+  return fetchFromBackend("/api/products/flash-sale", { params });
 }
 
 /**
@@ -101,16 +98,16 @@ export async function searchShopeeProducts(params: {
 }) {
   // Call Next.js API route (client-side), not backend directly
   const searchParams = new URLSearchParams();
-  if (params.page) searchParams.set('page', params.page);
-  if (params.search) searchParams.set('search', params.search);
-  if (params.commissionRate) searchParams.set('commissionRate', params.commissionRate);
-  if (params.ratingStar) searchParams.set('ratingStar', params.ratingStar);
-  
+  if (params.page) searchParams.set("page", params.page);
+  if (params.search) searchParams.set("search", params.search);
+  if (params.commissionRate) searchParams.set("commissionRate", params.commissionRate);
+  if (params.ratingStar) searchParams.set("ratingStar", params.ratingStar);
+
   const url = `/api/shopee/search?${searchParams.toString()}`;
   const response = await fetch(url, {
     headers: {
-      'Content-Type': 'application/json',
-    },
+      "Content-Type": "application/json"
+    }
   });
 
   if (!response.ok) {

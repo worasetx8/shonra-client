@@ -1,20 +1,20 @@
-import { MetadataRoute } from 'next';
-import { getBackendUrl } from '@/lib/api-utils';
+import { MetadataRoute } from "next";
+import { getBackendUrl } from "@/lib/api-utils";
 
 /**
  * Generate sitemap dynamically from API settings
  * Falls back to default if API is unavailable
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://shonra.com';
+  let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://shonra.com";
 
   try {
     const BACKEND_URL = getBackendUrl();
     const response = await fetch(`${BACKEND_URL}/api/settings`, {
-      next: { revalidate: 300, tags: ['settings'] }, // Cache for 5 minutes
+      next: { revalidate: 300, tags: ["settings"] }, // Cache for 5 minutes
       headers: {
-        'Content-Type': 'application/json',
-      },
+        "Content-Type": "application/json"
+      }
     });
 
     if (response.ok) {
@@ -24,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
   } catch (error) {
-    console.warn('Failed to fetch site URL from API, using default:', error);
+    console.warn("Failed to fetch site URL from API, using default:", error);
   }
 
   // Static pages
@@ -32,11 +32,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: siteUrl,
       lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 1.0,
-    },
+      changeFrequency: "daily" as const,
+      priority: 1.0
+    }
   ];
 
   return routes;
 }
-

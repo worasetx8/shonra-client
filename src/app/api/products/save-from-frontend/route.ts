@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendUrl } from "@/lib/api-utils";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * Save product from frontend (public endpoint, no auth required)
@@ -10,11 +10,11 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Add source = 'frontend' to indicate product was added from client page
     const productData = {
       ...body,
-      source: 'frontend'
+      source: "frontend"
     };
 
     const BACKEND_URL = getBackendUrl();
@@ -45,4 +45,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
