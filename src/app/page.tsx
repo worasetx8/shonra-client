@@ -679,15 +679,13 @@ export default function NewHomePage() {
         if (transformedResults.length < minResults) {
           setIsSearchingShopee(true);
           try {
-            const shopeeParams = new URLSearchParams({
+            // Use ClientAPI to call backend directly
+            const shopeeData = await ClientAPI.searchShopeeProducts({
               search: query,
               page: '1',
-              commissionRate: String(searchSettings.min_commission_rate || 10), // From settings
-              ratingStar: String(searchSettings.min_rating_star || 4.5) // From settings
+              commissionRate: String(searchSettings.min_commission_rate || 10),
+              ratingStar: String(searchSettings.min_rating_star || 4.5)
             });
-
-            const shopeeResponse = await fetch(`/api/shopee?${shopeeParams.toString()}`);
-            const shopeeData = await shopeeResponse.json();
 
 
             // Backend wraps data in formatResponse, so structure is: data.data.productOfferV2.nodes
