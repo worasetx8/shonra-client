@@ -43,10 +43,28 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [mounted, setMounted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const linkRef = useRef<HTMLAnchorElement>(null);
   
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Helper function to open link using hidden <a> tag (avoids popup blocker and preserves cookies)
+  const openLink = (url: string) => {
+    if (linkRef.current) {
+      linkRef.current.href = url;
+      linkRef.current.click();
+    } else {
+      // Fallback: create temporary <a> tag
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   // Handle Shop Now click for Shopee products
   const handleShopNow = async (e: React.MouseEvent | React.TouchEvent) => {
@@ -60,25 +78,9 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     if (isSaving) return;
 
-    // For mobile browsers, use location.href to avoid popup blocker and preserve cookies
-    // For desktop, try window.open first, fallback to location.href if blocked
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // Mobile: Use location.href (redirect) to avoid popup blocker and preserve cookies
-      // This ensures Shopee affiliate tracking works correctly
-      window.location.href = product.offerLink;
-    } else {
-      // Desktop: Try window.open first
-      const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
-      
-      // Check if popup was blocked
-      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-        // Popup blocked - use redirect as fallback
-        window.location.href = product.offerLink;
-        return;
-      }
-    }
+    // Use hidden <a> tag to open link (avoids popup blocker and preserves cookies/tracking)
+    // This method works on both mobile and desktop
+    openLink(product.offerLink);
 
     setIsSaving(true);
     
@@ -181,16 +183,8 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
     if (product.fromShopee) {
       handleShopNow(e);
     } else {
-      // For non-Shopee products, use same logic as Shopee products
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        window.location.href = product.offerLink;
-      } else {
-        const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
-        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-          window.location.href = product.offerLink;
-        }
-      }
+      // For non-Shopee products, use same method as Shopee products
+      openLink(product.offerLink);
     }
   };
 
@@ -248,16 +242,8 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
       if (product.fromShopee) {
         handleShopNow(e);
       } else {
-        // For non-Shopee products, use same logic as Shopee products
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        if (isMobile) {
-          window.location.href = product.offerLink;
-        } else {
-          const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
-          if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-            window.location.href = product.offerLink;
-          }
-        }
+        // For non-Shopee products, use same method as Shopee products
+        openLink(product.offerLink);
       }
     }
   };
@@ -504,16 +490,8 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 if (product.fromShopee) {
                   handleShopNow(e);
                 } else {
-                  // For non-Shopee products, use same logic as Shopee products
-                  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                  if (isMobile) {
-                    window.location.href = product.offerLink;
-                  } else {
-                    const newWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
-                    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-                      window.location.href = product.offerLink;
-                    }
-                  }
+                  // For non-Shopee products, use same method as Shopee products
+                  openLink(product.offerLink);
                 }
               }}
               disabled={isSaving}
@@ -527,7 +505,20 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </VStack>
       </Box>
       
-      {/* Removed hidden link to prevent double-click issue on mobile */}
+      {/* Hidden <a> tag for opening links (avoids popup blocker and preserves cookies/tracking) */}
+      <Box
+        as="a"
+        ref={linkRef}
+        href={product.offerLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        position="absolute"
+        opacity={0}
+        pointerEvents="none"
+        aria-hidden="true"
+        tabIndex={-1}
+        style={{ width: 0, height: 0, overflow: 'hidden' }}
+      />
     </Box>
   );
 };
