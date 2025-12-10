@@ -11,7 +11,7 @@ services:
         - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-https://shonra.com}
         - NEXT_PUBLIC_ENABLE_AI_SEO=${NEXT_PUBLIC_ENABLE_AI_SEO:-false}
     container_name: shonra-frontend
-    image: shonra-frontend:1.0.3
+    image: shonra-frontend:1.0.4
     env_file:
       - stack.env
     restart: always

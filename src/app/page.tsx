@@ -12,6 +12,7 @@ import Link from 'next/link';
 import ModernProductCard from '@/components/ModernProductCard';
 import StructuredData from '@/components/StructuredData';
 import { generateMetaDescription, generateKeywords } from '@/lib/aiSeoService';
+import * as ClientAPI from '@/lib/client-api';
 
 interface Product {
   productName: string;
@@ -154,21 +155,7 @@ export default function NewHomePage() {
         return;
       }
 
-      const positionName = encodeURIComponent('Banner Popup');
-      const url = `/api/banners/public/${positionName}`;
-      
-      // Use browser cache - browser will respect Cache-Control headers from server
-      // stale-while-revalidate: Show cached data immediately, fetch new data in background
-      const response = await fetch(url, {
-        cache: 'default' // Use browser cache (respects Cache-Control headers)
-      });
-      
-      if (!response.ok) {
-        setPopupBanners([]);
-        return;
-      }
-      
-      const data = await response.json();
+      const data = await ClientAPI.fetchBanners('Banner Popup');
       
       if (data.success && data.data) {
         // Handle both single banner (object) and multiple banners (array)
@@ -261,21 +248,7 @@ export default function NewHomePage() {
   // Fetch Flash Sale Banner function
   const fetchFlashSaleBanner = useCallback(async () => {
     try {
-      const positionName = encodeURIComponent('Flash Sale Banner');
-      const url = `/api/banners/public/${positionName}`;
-      
-      // Use browser cache - browser will respect Cache-Control headers from server
-      // stale-while-revalidate: Show cached data immediately, fetch new data in background
-      const response = await fetch(url, {
-        cache: 'default' // Use browser cache (respects Cache-Control headers)
-      });
-      
-      if (!response.ok) {
-        setFlashSaleBanner(null);
-        return;
-      }
-      
-      const data = await response.json();
+      const data = await ClientAPI.fetchBanners('Flash Sale Banner');
       
       if (data.success && data.data) {
         // Backend returns array, so get first banner
@@ -325,13 +298,7 @@ export default function NewHomePage() {
   const fetchFlashSaleProducts = useCallback(async () => {
     setFlashSaleLoading(true);
     try {
-      const response = await fetch('/api/flash-sale?limit=20');
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch Flash Sale products: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await ClientAPI.fetchFlashSaleProducts({ limit: '20' });
 
       if (!data.success) {
         setFlashSaleProducts([]);
@@ -404,16 +371,9 @@ export default function NewHomePage() {
   // Fetch categories
   const fetchCategories = useCallback(async () => {
     try {
-      // Use browser cache - browser will respect Cache-Control headers from server
-      // stale-while-revalidate: Show cached data immediately, fetch new data in background
-      const response = await fetch(`/api/categories`, {
-        cache: 'default' // Use browser cache (respects Cache-Control headers)
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setCategories(data.data || []);
-        }
+      const data = await ClientAPI.fetchCategories();
+      if (data.success) {
+        setCategories(data.data || []);
       }
     } catch (err) {
       console.error('Error fetching categories:', err);
@@ -423,16 +383,9 @@ export default function NewHomePage() {
   // Fetch tags
   const fetchTags = useCallback(async () => {
     try {
-      // Use browser cache - browser will respect Cache-Control headers from server
-      // stale-while-revalidate: Show cached data immediately, fetch new data in background
-      const response = await fetch(`/api/tags`, {
-        cache: 'default' // Use browser cache (respects Cache-Control headers)
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setTags(data.data || []);
-        }
+      const data = await ClientAPI.fetchTags();
+      if (data.success) {
+        setTags(data.data || []);
       }
     } catch (err) {
       console.error('Error fetching tags:', err);
@@ -442,14 +395,8 @@ export default function NewHomePage() {
   // Fetch settings (logo, website name, search settings)
   const fetchSettings = async () => {
     try {
-      // Use browser cache - browser will respect Cache-Control headers from server
-      // stale-while-revalidate: Show cached data immediately, fetch new data in background
-      const response = await fetch('/api/settings', {
-        cache: 'default' // Use browser cache (respects Cache-Control headers)
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
+      const data = await ClientAPI.fetchSettings();
+      if (data.success && data.data) {
           const logoUrl = data.data.logo_client_url || data.data.logo_url || null;
           // If logo URL is a path (starts with /api/), it's already correct
           // If it's base64, use as is
@@ -489,7 +436,6 @@ export default function NewHomePage() {
             min_rating_star: data.data.min_rating_star || 4.5
           });
         }
-      }
     } catch (err) {
       console.error('Error fetching settings:', err);
     }
@@ -559,13 +505,8 @@ export default function NewHomePage() {
         }
       }
 
-      const response = await fetch(`/api/products/public?${params.toString()}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-
-      const data = await response.json();
+      const paramsObj = Object.fromEntries(params.entries());
+      const data = await ClientAPI.fetchProducts(paramsObj);
 
       if (!data.success) {
         throw new Error(data.message || 'Error fetching products');
@@ -707,8 +648,8 @@ export default function NewHomePage() {
         limit: '50'
       });
 
-      const response = await fetch(`/api/products/public?${params.toString()}`);
-      const data = await response.json();
+      const paramsObj = Object.fromEntries(params.entries());
+      const data = await ClientAPI.fetchProducts(paramsObj);
 
       if (data.success) {
         const transformedResults = (data.data || [])
