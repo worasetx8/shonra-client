@@ -24,38 +24,24 @@ RUN npm install --legacy-peer-deps || npm ci --legacy-peer-deps
 # Copy source code
 COPY . .
 
-# Build the application with error handling
+# Build the application
 RUN echo "=== Starting Next.js build ===" && \
-    npm run build 2>&1 | tee /tmp/build.log || { \
+    npm run build || { \
         echo ""; \
-        echo "❌ Build failed! Exit code: $?"; \
-        echo ""; \
-        echo "=== Last 100 lines of build log ==="; \
-        tail -100 /tmp/build.log; \
-        echo ""; \
-        echo "=== Checking for common errors ==="; \
-        grep -i "error" /tmp/build.log | tail -30 || echo "No 'error' keyword found"; \
-        echo ""; \
+        echo "❌ Build failed!"; \
+        echo "Check the output above for error messages."; \
         exit 1; \
-    } && \
-    echo "✅ Build completed successfully" && \
-    echo "=== Build output summary ===" && \
-    tail -20 /tmp/build.log && \
-    echo "" && \
-    echo "=== Verifying build output ===" && \
-    (test -d /app/.next/standalone && echo "✅ standalone folder exists" || (echo "❌ standalone folder not found!" && exit 1)) && \
-    (test -d /app/.next/static && echo "✅ static folder exists" || (echo "❌ static folder not found!" && exit 1)) && \
-    (test -f /app/.next/standalone/server.js && echo "✅ server.js exists" || (echo "❌ server.js not found!" && exit 1)) && \
-    echo "" && \
-    echo "=== Build verification complete ===" && \
-    echo "Contents of .next:" && \
-    ls -la /app/.next/ && \
-    echo "" && \
-    echo "Contents of .next/standalone:" && \
-    ls -la /app/.next/standalone/ | head -20 && \
-    echo "" && \
-    echo "Contents of .next/static:" && \
-    ls -la /app/.next/static/ | head -20
+    }
+
+# Verify build output
+RUN echo "=== Verifying build output ===" && \
+    test -d /app/.next/standalone || (echo "❌ ERROR: .next/standalone not found!" && exit 1) && \
+    test -d /app/.next/static || (echo "❌ ERROR: .next/static not found!" && exit 1) && \
+    test -f /app/.next/standalone/server.js || (echo "❌ ERROR: server.js not found!" && exit 1) && \
+    echo "✅ Build verification passed" && \
+    echo "Standalone folder contents:" && \
+    ls -la /app/.next/standalone/ | head -10 && \
+    echo "Static folder exists: $(ls -la /app/.next/static/ | wc -l) files"
 
 # Production Stage
 FROM node:20.15.1-alpine AS runner
