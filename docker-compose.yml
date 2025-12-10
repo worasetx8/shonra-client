@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Frontend - Next.js Client (Customer-facing website)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL:-https://api.shonra.com}
+        - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-https://shonra.com}
+        - NEXT_PUBLIC_ENABLE_AI_SEO=${NEXT_PUBLIC_ENABLE_AI_SEO:-false}
+    container_name: shonra-frontend
+    image: shonra-frontend:1.0.4
+    env_file:
+      - stack.env
+    restart: always
+    # Expose port for internal network access (nginx-proxy)
+    expose:
+      - '3000'
+    # Optional: Map port to host for direct access (for debugging)
+    # Uncomment if you need direct access from host
+    # ports:
+    #   - '3000:3000'
+    networks:
+      - shonra-network
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+networks:
+  shonra-network:
+    external: true
+
