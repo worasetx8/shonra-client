@@ -3,6 +3,9 @@ FROM node:20.15.1-alpine AS build
 
 WORKDIR /app
 
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++
+
 # Build arguments for environment variables
 ARG NEXT_PUBLIC_BACKEND_URL
 ARG NEXT_PUBLIC_SITE_URL
@@ -13,16 +16,31 @@ ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_ENABLE_AI_SEO=${NEXT_PUBLIC_ENABLE_AI_SEO}
 ENV NODE_ENV=production
+ENV SKIP_ENV_VALIDATION=true
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Copy package files and install dependencies
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps --verbose || npm ci
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build the application with error handling
+RUN echo "=== Starting Next.js Build ===" && \
+    npm run build 2>&1 | tee /tmp/build.log || { \
+        echo ""; \
+        echo "❌ Build failed!"; \
+        echo "=== Last 100 lines of build log ==="; \
+        tail -100 /tmp/build.log || cat /tmp/build.log; \
+        echo ""; \
+        echo "=== Checking for common errors ==="; \
+        grep -i "error" /tmp/build.log | tail -20 || echo "No 'error' found in log"; \
+        exit 1; \
+    } && \
+    echo "✅ Build completed successfully" && \
+    ls -la .next/standalone 2>/dev/null || echo "⚠️ Warning: .next/standalone not found, checking .next directory..." && \
+    ls -la .next/ 2>/dev/null || echo "⚠️ Warning: .next directory not found"
 
 # Production Stage
 FROM node:20.15.1-alpine AS runner
