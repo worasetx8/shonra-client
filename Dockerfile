@@ -18,15 +18,18 @@ ENV NODE_ENV=production
 RUN apk add --no-cache python3 make g++
 
 # Copy package files and install dependencies
-COPY package*.json ./
-RUN npm install --legacy-peer-deps || npm ci --legacy-peer-deps
+COPY package.json package-lock.json ./
+RUN npm ci --legacy-peer-deps --include=dev --loglevel=error
 
 # Copy source code
 COPY . .
 
+# Clean any build artifacts
+RUN rm -rf .next node_modules/.cache
+
 # Build the application
 RUN echo "=== Starting Next.js build ===" && \
-    npm run build || { \
+    NODE_OPTIONS="--max-old-space-size=4096" npm run build || { \
         echo ""; \
         echo "❌ Build failed!"; \
         echo "Check the output above for error messages."; \

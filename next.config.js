@@ -28,43 +28,43 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/api/categories',
+        source: "/api/categories",
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, s-maxage=300, stale-while-revalidate=600',
-          },
-        ],
+            key: "Cache-Control",
+            value: "public, s-maxage=300, stale-while-revalidate=600"
+          }
+        ]
       },
       {
-        source: '/api/tags',
+        source: "/api/tags",
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, s-maxage=300, stale-while-revalidate=600',
-          },
-        ],
+            key: "Cache-Control",
+            value: "public, s-maxage=300, stale-while-revalidate=600"
+          }
+        ]
       },
       {
-        source: '/api/banners/:path*',
+        source: "/api/banners/:path*",
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, s-maxage=300, stale-while-revalidate=600',
-          },
-        ],
+            key: "Cache-Control",
+            value: "public, s-maxage=300, stale-while-revalidate=600"
+          }
+        ]
       },
       {
-        source: '/api/settings',
+        source: "/api/settings",
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, s-maxage=60, stale-while-revalidate=120',
-          },
-        ],
-      },
+            key: "Cache-Control",
+            value: "public, s-maxage=60, stale-while-revalidate=120"
+          }
+        ]
+      }
     ];
-  },
+  }
 };
 
 module.exports = nextConfig;
