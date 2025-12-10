@@ -7,12 +7,21 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:300
 
 async function getSettings() {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/settings`, { cache: 'no-store' });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+    const res = await fetch(`${BACKEND_URL}/api/settings`, { 
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
     if (!res.ok) return null;
     const data = await res.json();
     return data.success ? data.data : null;
   } catch (error) {
-    console.error('Failed to fetch settings:', error);
+    console.error('Failed to fetch settings:', error instanceof Error ? error.message : 'Unknown error');
     return null;
   }
 }
