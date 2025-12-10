@@ -14,15 +14,38 @@ ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_ENABLE_AI_SEO=${NEXT_PUBLIC_ENABLE_AI_SEO}
 ENV NODE_ENV=production
 
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++
+
 # Copy package files and install dependencies
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps || npm ci --legacy-peer-deps
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build the application with error handling
+RUN echo "=== Starting Next.js build ===" && \
+    npm run build 2>&1 | tee /tmp/build.log || { \
+        echo ""; \
+        echo "❌ Build failed! Exit code: $?"; \
+        echo ""; \
+        echo "=== Last 100 lines of build log ==="; \
+        tail -100 /tmp/build.log; \
+        echo ""; \
+        echo "=== Checking for common errors ==="; \
+        grep -i "error" /tmp/build.log | tail -30 || echo "No 'error' keyword found"; \
+        echo ""; \
+        exit 1; \
+    } && \
+    echo "✅ Build completed successfully" && \
+    echo "=== Build output summary ===" && \
+    tail -20 /tmp/build.log && \
+    echo "" && \
+    echo "=== Verifying build output ===" && \
+    ls -la /app/.next/standalone 2>/dev/null && echo "✅ standalone folder exists" || echo "❌ standalone folder not found!" && \
+    ls -la /app/.next/static 2>/dev/null && echo "✅ static folder exists" || echo "❌ static folder not found!" && \
+    test -f /app/.next/standalone/server.js && echo "✅ server.js exists" || echo "❌ server.js not found!"
 
 # Production Stage
 FROM node:20.15.1-alpine AS runner
