@@ -6,6 +6,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_BACKEND_URL=https://api.shonra.com
+        - NEXT_PUBLIC_SITE_URL=https://shonra.com
+        - NEXT_PUBLIC_ENABLE_AI_SEO=false
     container_name: shonra-frontend
     image: shonra-frontend:latest
     env_file:
