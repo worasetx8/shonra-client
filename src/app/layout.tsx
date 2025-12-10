@@ -6,7 +6,7 @@ import { getBackendUrl } from '@/lib/api-utils';
 const DEFAULT_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://shonra.com';
 const DEFAULT_SITE_NAME = 'SHONRA';
 const DEFAULT_TITLE = 'SHONRA - Platform Official Store';
-const DEFAULT_DESCRIPTION = 'Discover amazing deals and earn commissions with SHONRA. Find the best products from Shopee with exclusive discounts and flash sales.';
+const DEFAULT_DESCRIPTION = 'All amazing deals and earn commissions with SHONRA. Find the best products from Shopee with exclusive discounts and flash sales.';
 const DEFAULT_KEYWORDS = ['Shopee', 'Affiliate', 'E-commerce', 'Flash Sale', 'Deals', 'Discount', 'Thailand', 'สินค้า', 'โปรโมชั่น', 'ลดราคา'];
 
 /**

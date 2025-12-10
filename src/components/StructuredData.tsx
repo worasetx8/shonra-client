@@ -18,7 +18,7 @@ export default function StructuredData({ type, data }: StructuredDataProps) {
           name: siteName,
           url: siteUrl,
           logo: `${siteUrl}/logo.png`,
-          description: 'Shopee Affiliate Platform - Discover amazing deals and earn commissions',
+          description: 'Shopee Affiliate Platform - All amazing deals and earn commissions',
           sameAs: [
             // Add social media URLs here when available
             // 'https://www.facebook.com/shonra',
@@ -37,7 +37,7 @@ export default function StructuredData({ type, data }: StructuredDataProps) {
           '@type': 'WebSite',
           name: siteName,
           url: siteUrl,
-          description: 'Discover amazing deals and earn commissions with SHONRA',
+          description: 'All amazing deals and earn commissions with SHONRA',
           potentialAction: {
             '@type': 'SearchAction',
             target: {

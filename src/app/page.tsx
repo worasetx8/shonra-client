@@ -409,7 +409,7 @@ export default function NewHomePage() {
           
           // Generate AI meta description if enabled
           if (process.env.NEXT_PUBLIC_ENABLE_AI_SEO === 'true') {
-            const content = `Shopee Affiliate Platform - ${data.data.website_name || 'SHONRA'} - Discover amazing deals, flash sales, and earn commissions`;
+            const content = `Shopee Affiliate Platform - ${data.data.website_name || 'SHONRA'} - All amazing deals, flash sales, and earn commissions`;
             generateMetaDescription({
               content,
               type: 'homepage',
@@ -1151,7 +1151,7 @@ export default function NewHomePage() {
           {/* Desktop Logo */}
           <div className="hidden lg:flex items-center gap-4">
             <h2 className="text-white font-bold text-lg">
-              {activeCategory === 'all' ? 'Discover' : categories.find(c => c.id === activeCategory)?.name || 'Discover'}
+              {activeCategory === 'all' ? 'All' : categories.find(c => c.id === activeCategory)?.name || 'All'}
             </h2>
           </div>
 
