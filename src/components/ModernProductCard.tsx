@@ -60,21 +60,7 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     if (isSaving) return;
 
-    // Open link immediately (synchronously) to avoid popup blocker on iOS
-    // Must be called in the same user gesture, before any async operations
-    const linkWindow = window.open(product.offerLink, '_blank', 'noopener,noreferrer');
-    
-    // If popup was blocked, fallback to same-tab navigation
-    if (!linkWindow || linkWindow.closed || typeof linkWindow.closed === 'undefined') {
-      // Popup blocked - use same tab navigation instead
-      window.location.href = product.offerLink;
-      return; // Exit early since we're navigating away
-    }
-
     setIsSaving(true);
-    
-    // Save product to database in background (don't wait for it)
-    // This prevents blocking the link opening
     try {
       // Save product to database
       // Backend uses commissionRate for commission_rate column
@@ -125,30 +111,41 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
         is_flash_sale: false,
       };
 
-      // Save in background - don't await, just fire and forget
-      // This prevents blocking the link opening and avoids popup blocker issues
-      fetch('/api/products/save-from-frontend', {
+      const saveResponse = await fetch('/api/products/save-from-frontend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(productData),
-      }).then((saveResponse) => {
-        if (!saveResponse.ok) {
-          console.error('Save product failed:', {
-            status: saveResponse.status,
-            statusText: saveResponse.statusText,
-          });
-        } else {
-          console.log('Product saved successfully');
-        }
-        setIsSaving(false);
-      }).catch((error) => {
-        console.error('Error saving product:', error);
-        setIsSaving(false);
       });
+
+      if (!saveResponse.ok) {
+        const errorText = await saveResponse.text();
+        console.error('Save product failed:', {
+          status: saveResponse.status,
+          statusText: saveResponse.statusText,
+          error: errorText
+        });
+        throw new Error(`Failed to save product: ${saveResponse.status} ${errorText}`);
+      }
+
+      const result = await saveResponse.json();
+      console.log('Product saved successfully:', result);
+
+      // Open affiliate link in new tab
+      window.open(product.offerLink, '_blank', 'noopener,noreferrer');
     } catch (error) {
-      console.error('Error preparing product data:', error);
+      console.error('Error saving product:', error);
+      // Log detailed error for debugging
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack
+        });
+      }
+      // Still open the link even if save fails
+      window.open(product.offerLink, '_blank', 'noopener,noreferrer');
+    } finally {
       setIsSaving(false);
     }
   };
@@ -440,7 +437,7 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
               _hover={{ bg: '#B91C1C', transform: 'translateY(-1px)', boxShadow: 'md' }}
               _active={{ bg: '#991B1B', transform: 'translateY(0)' }}
               transition="all 0.2s"
-              onClick={(e: React.MouseEvent) => {
+              onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 if (product.fromShopee) {
