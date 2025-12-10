@@ -437,7 +437,7 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
               _hover={{ bg: '#B91C1C', transform: 'translateY(-1px)', boxShadow: 'md' }}
               _active={{ bg: '#991B1B', transform: 'translateY(0)' }}
               transition="all 0.2s"
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
                 if (product.fromShopee) {
