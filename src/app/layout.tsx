@@ -14,19 +14,23 @@ const DEFAULT_KEYWORDS = ['Shopee', 'Affiliate', 'E-commerce', 'Flash Sale', 'De
  * Note: This runs at build time and request time (with caching)
  */
 async function getSEOSettings() {
-  // Skip API call during build time if backend URL is localhost
   const BACKEND_URL = getBackendUrl();
-  const isBuildTime = process.env.NODE_ENV === 'production' && !process.env.NEXT_RUNTIME;
   
-  // During build time, skip API call if backend is not accessible
-  if (isBuildTime && BACKEND_URL.includes('localhost')) {
-    console.log('Build time detected with localhost backend, using default SEO settings');
+  // Skip API call during build time if backend is not accessible
+  // This prevents build failures when backend is not available
+  const shouldSkipAPICall = 
+    process.env.NODE_ENV === 'production' && 
+    !process.env.NEXT_RUNTIME &&
+    (BACKEND_URL.includes('localhost') || BACKEND_URL.includes('127.0.0.1'));
+  
+  if (shouldSkipAPICall) {
+    console.log('Build time: Skipping API call, using default SEO settings');
     return getDefaultSEOSettings();
   }
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
 
     const response = await fetch(`${BACKEND_URL}/api/settings`, {
       next: { revalidate: 60, tags: ['settings'] }, // Cache for 60 seconds
@@ -63,7 +67,7 @@ async function getSEOSettings() {
       }
     }
   } catch (error) {
-    console.warn('Failed to fetch SEO settings from API, using defaults:', error instanceof Error ? error.message : 'Unknown error');
+    console.warn('Failed to fetch SEO settings, using defaults:', error instanceof Error ? error.message : 'Unknown error');
   }
 
   return getDefaultSEOSettings();

@@ -11,7 +11,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   try {
     const BACKEND_URL = getBackendUrl();
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
 
     const response = await fetch(`${BACKEND_URL}/api/settings`, {
       next: { revalidate: 300, tags: ["settings"] }, // Cache for 5 minutes
