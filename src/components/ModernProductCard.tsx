@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, memo, useRef } from 'react';
 import {
   Box,
   Image,
@@ -42,6 +42,7 @@ interface ProductCardProps {
 const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [mounted, setMounted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   
   useEffect(() => {
     setMounted(true);
@@ -148,6 +149,39 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   };
 
+  // Handle touch start to track initial touch position
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+  };
+
+  // Handle touch end - only trigger click if it wasn't a scroll
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+
+    const touch = e.changedTouches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+    
+    // If movement is more than 10px, consider it a scroll, not a tap
+    const isScroll = deltaX > 10 || deltaY > 10;
+    
+    // Reset touch start
+    touchStartRef.current = null;
+
+    // Only trigger click if it wasn't a scroll
+    if (!isScroll) {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'BUTTON' || target.closest('button')) {
+        return;
+      }
+      handleCardClick(e);
+    }
+  };
+
   const isMall = product.shopType === '1';
   const rating = typeof product.ratingStar === 'string' ? parseFloat(product.ratingStar) || 0 : Number(product.ratingStar) || 0;
   const hasDiscount = product.priceDiscountRate && product.priceDiscountRate > 0;
@@ -216,14 +250,8 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
       w="full"
       role="group"
       onClick={handleCardClick}
-      onTouchEnd={(e) => {
-        // For iOS Safari, ensure touch events work
-        const target = e.target as HTMLElement;
-        if (target.tagName === 'BUTTON' || target.closest('button')) {
-          return;
-        }
-        handleCardClick(e);
-      }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Mall Badge */}
       {isMall && (

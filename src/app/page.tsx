@@ -400,16 +400,28 @@ export default function NewHomePage() {
     try {
       const data = await ClientAPI.fetchSettings();
       if (data.success && data.data) {
-          const logoUrl = data.data.logo_client_url || data.data.logo_url || null;
-          // If logo URL is a path (starts with /api/), it's already correct
-          // If it's base64, use as is
-          // If it's empty, set to null
+          let logoUrl = data.data.logo_client_url || data.data.logo_url || null;
+          
+          // Convert relative path to full URL if needed
+          if (logoUrl) {
+            // Check if it's base64 data URI
+            const isBase64 = logoUrl.startsWith('data:image/');
+            
+            // If it's a relative path (starts with /), convert to full backend URL
+            if (!isBase64 && logoUrl.startsWith('/')) {
+              const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.shonra.com';
+              logoUrl = `${backendUrl}${logoUrl}`;
+            }
+            // If it's already a full URL (starts with http), use as is
+            // If it's base64, use as is
+          }
+          
           setLogoUrl(logoUrl);
           setWebsiteName(data.data.website_name || 'SHONRA');
           
           // Generate AI meta description if enabled
           if (process.env.NEXT_PUBLIC_ENABLE_AI_SEO === 'true') {
-            const content = `Shopee Affiliate Platform - ${data.data.website_name || 'SHONRA'} - All amazing deals, flash sales, and earn commissions`;
+            const content = `SHONRA Platform - ${data.data.website_name || 'SHONRA'} - All amazing deals, flash sales, and earn commissions`;
             generateMetaDescription({
               content,
               type: 'homepage',
@@ -946,7 +958,7 @@ export default function NewHomePage() {
           <Link href="/" className="flex items-center gap-3">
             {logoUrl ? (
               <img 
-                src={logoUrl.startsWith('http') ? logoUrl : logoUrl} 
+                src={logoUrl} 
                 alt={websiteName}
                 className="w-8 h-8 object-contain rounded-lg"
                 onError={(e) => {
@@ -1151,7 +1163,7 @@ export default function NewHomePage() {
           {/* Desktop Logo */}
           <div className="hidden lg:flex items-center gap-4">
             <h2 className="text-white font-bold text-lg">
-              {activeCategory === 'all' ? 'All Items' : categories.find(c => c.id === activeCategory)?.name || 'All Items'}
+              {activeCategory === 'all' ? 'All' : categories.find(c => c.id === activeCategory)?.name || 'All'}
             </h2>
           </div>
 
