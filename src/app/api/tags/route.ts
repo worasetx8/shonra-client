@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBackendUrl } from "@/lib/api-utils";
+import { getBackendUrl, createDefaultHeaders } from "@/lib/api-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -14,9 +14,7 @@ export async function GET(request: NextRequest) {
     const BACKEND_URL = getBackendUrl();
     const response = await fetch(`${BACKEND_URL}/api/tags/public`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: createDefaultHeaders(),
       // If hard refresh, bypass cache. Otherwise, use Next.js Data Cache for 5 minutes
       ...(isHardRefresh ? { cache: 'no-store' } : {
         next: { 

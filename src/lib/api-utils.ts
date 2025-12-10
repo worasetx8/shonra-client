@@ -9,6 +9,23 @@ export function getBackendUrl(): string {
 }
 
 /**
+ * Create default headers for backend requests with User-Agent
+ * @returns Headers object with User-Agent and Content-Type
+ */
+export function createDefaultHeaders(additionalHeaders?: HeadersInit): HeadersInit {
+  const defaultHeaders: HeadersInit = {
+    'Content-Type': 'application/json',
+    'User-Agent': 'SHONRA-Frontend/1.0',
+  };
+  
+  if (additionalHeaders) {
+    return { ...defaultHeaders, ...additionalHeaders };
+  }
+  
+  return defaultHeaders;
+}
+
+/**
  * Extract authentication token from request (cookie or Authorization header)
  * @returns token string or null if not found
  */
@@ -26,7 +43,8 @@ export function getAuthToken(request: NextRequest): string | null {
 export function createAuthHeaders(token: string): HeadersInit {
   return {
     'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'User-Agent': 'SHONRA-Frontend/1.0',
   };
 }
 

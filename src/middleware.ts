@@ -24,12 +24,33 @@ async function getBypassToken(): Promise<string | null> {
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
 
+  // Block malicious file extensions and suspicious paths
+  const maliciousPaths = [
+    /\.php$/i,
+    /\.asp$/i,
+    /\.aspx$/i,
+    /\.jsp$/i,
+    /\.cgi$/i,
+    /wp-admin/i,
+    /wp-content/i,
+    /wp-includes/i,
+    /xmlrpc/i,
+    /phpmyadmin/i,
+    /adminer/i,
+    /\.env$/i,
+    /\.git/i,
+  ];
+
+  if (maliciousPaths.some(pattern => pattern.test(pathname))) {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+
   // Ignore static files, API routes, and backoffice
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/backoffice') ||
-    pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|css|js)$/)
+    pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|css|js|woff|woff2|ttf|eot)$/)
   ) {
     return NextResponse.next()
   }

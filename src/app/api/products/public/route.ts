@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBackendUrl } from "@/lib/api-utils";
+import { getBackendUrl, createDefaultHeaders } from "@/lib/api-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -29,9 +29,7 @@ export async function GET(request: NextRequest) {
 
     const response = await fetch(url, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: createDefaultHeaders(),
       cache: "no-store"
     });
 
