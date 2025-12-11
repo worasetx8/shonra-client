@@ -1516,15 +1516,6 @@ export default function NewHomePage() {
               <span className="text-white font-bold text-lg">Flash Sale</span>
             </div>
           )}
-          {/* Refresh Button - Positioned on banner */}
-          <button 
-            onClick={fetchFlashSaleProducts}
-            disabled={flashSaleLoading}
-            className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors disabled:opacity-50 z-20"
-            title="Refresh Flash Sale"
-          >
-            <RefreshCw className={`w-4 h-4 ${flashSaleLoading ? 'animate-spin' : ''}`} />
-          </button>
         </div>
 
         {/* Flash Deals Content - Scrollable */}
@@ -1654,9 +1645,20 @@ export default function NewHomePage() {
         >
           {/* Modal Content */}
           <div 
-            className="w-full max-w-lg max-h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            className="w-full max-w-lg max-h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col relative"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Close Button - Top Right Corner */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFlashSaleModalOpen(false);
+              }}
+              className="absolute top-2 right-2 z-30 p-1.5 bg-white/95 hover:bg-white text-gray-700 hover:text-red-600 rounded-full shadow-lg transition-all hover:scale-110 backdrop-blur-sm border border-gray-200"
+            >
+              <X size={16} strokeWidth={2.5} />
+            </button>
+            
             {/* Flash Sale Banner - Fixed at Top */}
             <div className="w-full flex-shrink-0 relative">
               {flashSaleBanner && flashSaleBanner.image_url ? (
