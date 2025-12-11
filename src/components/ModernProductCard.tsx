@@ -101,28 +101,29 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
       is_flash_sale: false,
     };
 
-    // Navigate immediately to avoid popup blocker
+    // Navigate immediately to avoid popup blocker (will open in Shopee app if installed)
     window.location.href = product.offerLink;
 
-    // Save product in background (fire-and-forget)
-    fetch('/api/products/save-from-frontend', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(productData),
-      keepalive: true, // Keep request alive even if page unloads
-    }).then(response => {
-      if (response.ok) {
-        console.log('Product saved successfully');
-      } else {
-        console.error('Failed to save product:', response.status);
+    // Save product in background using sendBeacon (guaranteed delivery)
+    try {
+      const blob = new Blob([JSON.stringify(productData)], { type: 'application/json' });
+      const sent = navigator.sendBeacon('/api/products/save-from-frontend', blob);
+      
+      if (!sent) {
+        // Fallback to fetch if sendBeacon fails (rare)
+        console.warn('sendBeacon failed, using fetch fallback');
+        fetch('/api/products/save-from-frontend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData),
+          keepalive: true,
+        }).catch(err => console.error('Fetch fallback error:', err));
       }
-    }).catch(error => {
+    } catch (error) {
       console.error('Error saving product:', error);
-    }).finally(() => {
+    } finally {
       setIsSaving(false);
-    });
+    }
   };
 
   // Handle card click for products
