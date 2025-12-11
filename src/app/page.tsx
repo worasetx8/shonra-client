@@ -980,14 +980,29 @@ export default function NewHomePage() {
       `}>
         {/* Sidebar Header */}
         <div className="h-16 bg-red-600 flex items-center justify-between px-4 shadow-md">
-          <Link href="/" className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              // Clear all filters and reset to home state
+              setActiveCategory('all');
+              setActiveTags([]);
+              setSearchQuery('');
+              setHasSearched(false);
+              setSearchResults([]);
+              setShopeeSearchResults([]);
+              setIsSearching(false);
+              setIsSearchingShopee(false);
+              setVisibleCount(16);
+              fetchProducts('all', 'all');
+              setIsMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-3 hover:opacity-90 transition-opacity"
+          >
             {logoUrl ? (
               <img 
                 src={logoUrl} 
                 alt={websiteName}
                 className="w-8 h-8 object-contain rounded-lg"
                 onError={(e) => {
-                  // Fallback if image fails to load
                   e.currentTarget.style.display = 'none';
                 }}
               />
@@ -997,7 +1012,7 @@ export default function NewHomePage() {
               </div>
             )}
             <span className="text-white font-bold text-xl logo-font">{websiteName}</span>
-          </Link>
+          </button>
           
           {/* Mobile close button */}
           <button 
@@ -1141,10 +1156,25 @@ export default function NewHomePage() {
           {/* Mobile Logo & Search */}
           <div className="flex items-center gap-3 lg:hidden flex-1">
             {/* Mobile Logo */}
-            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+            <button 
+              onClick={() => {
+                // Clear all filters and reset to home state
+                setActiveCategory('all');
+                setActiveTags([]);
+                setSearchQuery('');
+                setHasSearched(false);
+                setSearchResults([]);
+                setShopeeSearchResults([]);
+                setIsSearching(false);
+                setIsSearchingShopee(false);
+                setVisibleCount(16);
+                fetchProducts('all', 'all');
+              }}
+              className="flex items-center gap-2 flex-shrink-0 hover:opacity-90 transition-opacity"
+            >
               {logoUrl ? (
                 <img 
-                  src={logoUrl.startsWith('http') ? logoUrl : logoUrl} 
+                  src={logoUrl} 
                   alt={websiteName}
                   className="w-8 h-8 object-contain rounded-lg"
                   onError={(e) => {
@@ -1156,7 +1186,7 @@ export default function NewHomePage() {
                   <span className="text-red-600 font-bold text-lg">S</span>
                 </div>
               )}
-            </Link>
+            </button>
             
             {/* Mobile Search Bar */}
             <form onSubmit={onSearchSubmit} className="flex-1">
@@ -1433,25 +1463,7 @@ export default function NewHomePage() {
 
       {/* RIGHT SIDEBAR - Flash Deals (Desktop) */}
       <aside className="hidden lg:flex w-80 bg-white border-l border-gray-200 flex-col shadow-lg">
-        {/* Flash Deals Header */}
-        <div className="h-16 bg-gray-900 flex items-center justify-between px-4 flex-shrink-0">
-          <div className="flex items-center gap-2 text-white">
-            <Zap className="text-yellow-400 fill-yellow-400" size={20} />
-            <span className="font-bold">Flash Deals</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={fetchFlashSaleProducts}
-              disabled={flashSaleLoading}
-              className="p-1 text-white hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
-              title="Refresh Flash Sale"
-            >
-              <RefreshCw className={`w-4 h-4 ${flashSaleLoading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
-
-        {/* Flash Sale Banner - ต่อจาก Header - Always Show */}
+        {/* Flash Sale Banner - Always Show at Top */}
         <div className="w-full flex-shrink-0 relative z-0">
           {flashSaleBanner && flashSaleBanner.image_url ? (
             flashSaleBanner.target_url && flashSaleBanner.target_url.trim() !== '' ? (
@@ -1473,7 +1485,6 @@ export default function NewHomePage() {
                   loading="eager"
                   draggable="false"
                   onError={(e) => {
-                    // If image fails to load, show placeholder
                     const target = e.currentTarget;
                     target.style.display = 'none';
                     const placeholder = document.createElement('div');
@@ -1491,7 +1502,6 @@ export default function NewHomePage() {
                 className="w-full h-auto object-cover"
                 loading="eager"
                 onError={(e) => {
-                  // If image fails to load, show placeholder
                   const target = e.currentTarget;
                   target.style.display = 'none';
                   const placeholder = document.createElement('div');
@@ -1502,11 +1512,19 @@ export default function NewHomePage() {
               />
             )
           ) : (
-            // No banner from database - show placeholder or nothing
             <div className="w-full h-32 bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center">
               <span className="text-white font-bold text-lg">Flash Sale</span>
             </div>
           )}
+          {/* Refresh Button - Positioned on banner */}
+          <button 
+            onClick={fetchFlashSaleProducts}
+            disabled={flashSaleLoading}
+            className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors disabled:opacity-50 z-20"
+            title="Refresh Flash Sale"
+          >
+            <RefreshCw className={`w-4 h-4 ${flashSaleLoading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
 
         {/* Flash Deals Content - Scrollable */}
@@ -1515,104 +1533,92 @@ export default function NewHomePage() {
           className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide relative"
         >
           {/* Products Container */}
-          <div className="p-4 space-y-4">
+          <div className="p-3">
           {flashSaleLoading ? (
-            // Loading skeleton for Flash Sale
-            Array.from({ length: 4 }, (_, i) => (
-              <div key={i} className="bg-gray-50 rounded-lg p-3 animate-pulse">
-                <div className="flex gap-3">
-                  <div className="w-16 h-16 bg-gray-200 rounded-lg"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-2 bg-gray-200 rounded w-full"></div>
-                  </div>
-                </div>
+            // Loading skeleton - 2 columns
+            <div className="grid grid-cols-2 gap-2">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className="bg-gray-50 rounded-lg p-2 animate-pulse">
+                <div className="w-full aspect-square bg-gray-200 rounded-lg mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-2 bg-gray-200 rounded w-2/3"></div>
               </div>
-            ))
+            ))}
+            </div>
           ) : flashSaleProducts.length > 0 ? (
-            flashSaleProducts.map((product, index) => {
+            <div className="grid grid-cols-2 gap-2">
+            {flashSaleProducts.map((product, index) => {
               const endTime = (product as any).periodEndTime || 0;
               const nowSec = Math.floor(Date.now() / 1000);
               let remaining: number;
 
               if (endTime > 0 && endTime > nowSec) {
-                // ใช้เวลาจริงจากฐานข้อมูล (หน่วยวินาที) - คำนวณครั้งเดียวตอน render
                 remaining = Math.max(endTime - nowSec, 0);
               } else {
-                // ถ้าไม่มีเวลาจริง หรือเวลาหมดแล้ว → ไม่แสดง countdown
                 remaining = 0;
               }
 
-              // Debug log removed to prevent spam
-
               return (
-              <div 
+              <a
                 key={product.itemId || index}
-                className="block bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition"
+                href={product.offerLink}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = product.offerLink;
+                }}
+                className="block bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition"
               >
-                <div className="flex gap-3 mb-2">
-                  <div className="relative flex-shrink-0">
-                    <img 
-                      src={product.imageUrl} 
-                      alt={product.productName}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
+                <div className="relative">
+                  <img 
+                    src={product.imageUrl} 
+                    alt={product.productName}
+                    className="w-full aspect-square object-cover"
+                  />
+                  {/* Discount Badge */}
+                  {product.discountRate && product.discountRate > 0 && (
+                    <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] px-2 py-1 font-bold">
+                      -{product.discountRate}%
+                    </div>
+                  )}
+                </div>
+                <div className="p-2">
+                  <h4 className="text-xs font-medium text-gray-900 mb-1 overflow-hidden" style={{ 
+                    height: '2.5rem',
+                    lineHeight: '1.25rem'
+                  }}>
+                    {product.productName}
+                  </h4>
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-red-600 font-bold text-sm">
+                      ฿{product.price?.toLocaleString()}
+                    </span>
+                    {product.originalPrice && product.originalPrice !== product.price && (
+                      <span className="text-gray-400 line-through text-[10px]">
+                        ฿{product.originalPrice?.toLocaleString()}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    {/* Discount Badge - วางไว้ด้านบนของชื่อสินค้า */}
-                    {product.discountRate && product.discountRate > 0 && (
-                      <div className="inline-flex items-center gap-1 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold mb-1">
-                        <span>⚡</span>
-                        <span>-{product.discountRate}%</span>
-                      </div>
-                    )}
-                    <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
-                      {product.productName}
-                    </h4>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-red-600 font-bold text-sm">
-                        ฿{product.price?.toLocaleString()}
-                      </span>
-                      {product.originalPrice && product.originalPrice !== product.price && (
-                        <span className="text-gray-400 line-through text-xs">
-                          ฿{product.originalPrice?.toLocaleString()}
-                        </span>
-                      )}
+                  {remaining > 0 && (
+                    <div className="text-[10px] text-red-600 font-semibold mb-1">
+                      ⏱ {formatCountdown(remaining)}
                     </div>
-                    {remaining > 0 && (
-                      <div className="text-[11px] text-red-600 font-semibold mb-1">
-                        ⏱ {formatCountdown(remaining)} left
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-red-600 h-2 rounded-full transition-all" 
-                          style={{ width: `${product.soldPercentage || 0}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-xs text-gray-500 whitespace-nowrap">
-                        {product.soldCount?.toLocaleString() || 0} sold
-                      </span>
+                  )}
+                  <div className="flex items-center gap-1">
+                    <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                      <div 
+                        className="bg-red-600 h-1.5 rounded-full transition-all" 
+                        style={{ width: `${product.soldPercentage || 0}%` }}
+                      ></div>
                     </div>
+                    <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                      {product.soldCount?.toLocaleString() || 0}
+                    </span>
                   </div>
                 </div>
-                {/* Shop Now Button */}
-                <a
-                  href={product.offerLink}
-                  className="block w-full bg-red-600 hover:bg-red-700 text-white text-center py-2 px-4 rounded-md font-bold text-sm transition-colors"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    window.location.href = product.offerLink;
-                  }}
-                >
-                  SHOP NOW
-                </a>
-              </div>
-              );
-            })
+              </a>
+            );
+            })}
+            </div>
           ) : (
             // No Flash Sale products
             <div className="text-center py-8 text-gray-500">
@@ -1642,25 +1648,17 @@ export default function NewHomePage() {
 
       {/* Flash Sale Modal - Mobile Only */}
       {isFlashSaleModalOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex flex-col">
-          {/* Modal Header */}
-          <div className="bg-red-600 text-white p-4 flex items-center justify-between shadow-lg">
-            <div className="flex items-center gap-2">
-              <Flame className="w-6 h-6 text-yellow-300" fill="currentColor" />
-              <h2 className="text-lg font-bold">Flash Sale</h2>
-            </div>
-            <button
-              onClick={() => setIsFlashSaleModalOpen(false)}
-              className="text-white hover:bg-red-700 p-2 rounded-lg transition-colors"
-            >
-              <X size={24} />
-            </button>
-          </div>
-
+        <div 
+          className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setIsFlashSaleModalOpen(false)}
+        >
           {/* Modal Content */}
-          <div className="flex-1 overflow-y-auto bg-white">
-            {/* Flash Sale Banner - Always Show - Fixed */}
-            <div className="w-full flex-shrink-0 sticky top-0 z-10 bg-white">
+          <div 
+            className="w-full max-w-lg max-h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Flash Sale Banner - Fixed at Top */}
+            <div className="w-full flex-shrink-0 relative">
               {flashSaleBanner && flashSaleBanner.image_url ? (
                 flashSaleBanner.target_url && flashSaleBanner.target_url.trim() !== '' ? (
                   <a
@@ -1717,103 +1715,94 @@ export default function NewHomePage() {
               )}
             </div>
 
-            {/* Flash Sale Products */}
-            <div className="p-4 space-y-4">
+            {/* Flash Sale Products - Scrollable Content */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-3">
               {flashSaleLoading ? (
-                // Loading skeleton
-                Array.from({ length: 4 }, (_, i) => (
-                  <div key={i} className="bg-gray-50 rounded-lg p-3 animate-pulse">
-                    <div className="flex gap-3">
-                      <div className="w-16 h-16 bg-gray-200 rounded-lg"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                        <div className="h-2 bg-gray-200 rounded w-full"></div>
-                      </div>
-                    </div>
+                // Loading skeleton - 2 columns
+                <div className="grid grid-cols-2 gap-3">
+                {Array.from({ length: 4 }, (_, i) => (
+                  <div key={i} className="bg-gray-50 rounded-lg p-2 animate-pulse">
+                    <div className="w-full aspect-square bg-gray-200 rounded-lg mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                    <div className="h-2 bg-gray-200 rounded w-2/3"></div>
                   </div>
-                ))
+                ))}
+                </div>
               ) : flashSaleProducts.length > 0 ? (
-                flashSaleProducts.map((product, index) => {
+                <div className="grid grid-cols-2 gap-3">
+                {flashSaleProducts.map((product, index) => {
                   const endTime = (product as any).periodEndTime || 0;
                   const nowSec = Math.floor(Date.now() / 1000);
                   let remaining: number;
 
                   if (endTime > 0 && endTime > nowSec) {
-                    // ใช้เวลาจริงจากฐานข้อมูล (หน่วยวินาที) - คำนวณครั้งเดียวตอน render
                     remaining = Math.max(endTime - nowSec, 0);
                   } else {
-                    // ถ้าไม่มีเวลาจริง หรือเวลาหมดแล้ว → ไม่แสดง countdown
                     remaining = 0;
                   }
 
                   return (
-                    <div 
+                    <a
                       key={product.itemId || index}
-                      className="block bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition"
+                      href={product.offerLink}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.location.href = product.offerLink;
+                      }}
+                      className="block bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition"
                     >
-                      <div className="flex gap-3 mb-2">
-                        <div className="relative flex-shrink-0">
-                          <img 
-                            src={product.imageUrl} 
-                            alt={product.productName}
-                            className="w-16 h-16 object-cover rounded-lg"
-                          />
+                      <div className="relative">
+                        <img 
+                          src={product.imageUrl} 
+                          alt={product.productName}
+                          className="w-full aspect-square object-cover"
+                        />
+                        {/* Discount Badge */}
+                        {product.discountRate && product.discountRate > 0 && (
+                          <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] px-2 py-1 font-bold">
+                            -{product.discountRate}%
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-2">
+                        <h4 className="text-xs font-medium text-gray-900 mb-1 overflow-hidden" style={{ 
+                          height: '2.5rem',
+                          lineHeight: '1.25rem'
+                        }}>
+                          {product.productName}
+                        </h4>
+                        <div className="flex items-baseline gap-1 mb-1">
+                          <span className="text-red-600 font-bold text-sm">
+                            ฿{product.price?.toLocaleString()}
+                          </span>
+                          {product.originalPrice && product.originalPrice !== product.price && (
+                            <span className="text-gray-400 line-through text-[10px]">
+                              ฿{product.originalPrice?.toLocaleString()}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          {/* Discount Badge */}
-                          {product.discountRate && product.discountRate > 0 && (
-                            <div className="inline-flex items-center gap-1 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold mb-1">
-                              <span>⚡</span>
-                              <span>-{product.discountRate}%</span>
-                            </div>
-                          )}
-                          <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
-                            {product.productName}
-                          </h4>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-red-600 font-bold text-sm">
-                              ฿{product.price?.toLocaleString()}
-                            </span>
-                            {product.originalPrice && product.originalPrice !== product.price && (
-                              <span className="text-gray-400 line-through text-xs">
-                                ฿{product.originalPrice?.toLocaleString()}
-                              </span>
-                            )}
+                        {remaining > 0 && (
+                          <div className="text-[10px] text-red-600 font-semibold mb-1">
+                            ⏱ {formatCountdown(remaining)}
                           </div>
-                          {remaining > 0 && (
-                            <div className="text-[11px] text-red-600 font-semibold mb-1">
-                              ⏱ {formatCountdown(remaining)} left
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="flex-1 bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-red-600 h-2 rounded-full transition-all" 
-                                style={{ width: `${product.soldPercentage || 0}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-xs text-gray-500 whitespace-nowrap">
-                              {product.soldCount?.toLocaleString() || 0} sold
-                            </span>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                            <div 
+                              className="bg-red-600 h-1.5 rounded-full transition-all" 
+                              style={{ width: `${product.soldPercentage || 0}%` }}
+                            ></div>
                           </div>
+                          <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                            {product.soldCount?.toLocaleString() || 0}
+                          </span>
                         </div>
                       </div>
-                      {/* Shop Now Button */}
-                      <a
-                        href={product.offerLink}
-                        className="block w-full bg-red-600 hover:bg-red-700 text-white text-center py-2.5 px-4 rounded-md font-bold text-sm transition-colors active:bg-red-800"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          window.location.href = product.offerLink;
-                        }}
-                      >
-                        SHOP NOW
-                      </a>
-                    </div>
+                    </a>
                   );
-                })
+                })}
+                </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <div className="text-4xl mb-2">⚡</div>
@@ -1821,6 +1810,7 @@ export default function NewHomePage() {
                   <p className="text-xs mt-1">Check back later!</p>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>

@@ -226,214 +226,93 @@ const ModernProductCard: React.FC<ProductCardProps> = ({ product }) => {
   }
 
   return (
-    <Box
-      bg="white"
-      border="1px"
-      borderColor="transparent"
-      _hover={{ 
-        borderColor: '#C53030', 
-        shadow: 'lg' 
-      }}
-      transition="all 0.2s"
-      cursor="pointer"
-      borderRadius="sm"
-      position="relative"
-      overflow="hidden"
-      display="flex"
-      flexDirection="column"
-      h="full"
-      w="full"
-      role="group"
+    <a
+      href={product.offerLink}
       onClick={handleCardClick}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      className="block bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition cursor-pointer"
     >
-      {/* Mall Badge */}
-      {isMall && (
-        <Badge
-          position="absolute"
-          top={0}
-          left={0}
-          bg="#d0011b"
-          color="white"
-          fontSize="10px"
-          fontWeight="bold"
-          px={2}
-          py={0.5}
-          zIndex={10}
-          borderRadius="0"
-          borderBottomRightRadius="sm"
-        >
-          Mall
-        </Badge>
-      )}
-      
-      {/* Discount Badge */}
-      {hasDiscount && (
-        <Box
-          position="absolute"
-          top={0}
-          right={0}
-          bg="yellow.400"
-          color="white"
-          fontSize="xs"
-          fontWeight="bold"
-          px={1}
-          py={1}
-          w={{ base: 9, md: 10 }}
-          textAlign="center"
-          zIndex={10}
-        >
-          <Text display="block">{Math.round(discountRate)}%</Text>
-          <Text fontSize={{ base: '8px', md: '10px' }} fontWeight="normal" textTransform="uppercase">
-            OFF
-          </Text>
-        </Box>
-      )}
-
       {/* Image */}
-      <Box
-        aspectRatio="1"
-        w="full"
-        overflow="hidden"
-        bg="gray.100"
-        position="relative"
-      >
-        <Image
+      <div className="relative">
+        <img
           src={product.imageUrl}
           alt={product.productName}
-          w="full"
-          h="full"
-          objectFit="cover"
-          transition="transform 0.5s"
-          _groupHover={{ transform: 'scale(1.05)' }}
+          className="w-full aspect-square object-cover"
           loading="lazy"
         />
-      </Box>
+        
+        {/* Mall Badge */}
+        {isMall && (
+          <div className="absolute top-0 left-0 bg-[#d0011b] text-white text-[10px] font-bold px-2 py-0.5">
+            Mall
+          </div>
+        )}
+        
+        {/* Discount Badge */}
+        {hasDiscount && (
+          <div className="absolute top-0 right-0 bg-yellow-400 text-white text-[10px] font-bold px-2 py-1">
+            {Math.round(discountRate)}% OFF
+          </div>
+        )}
+      </div>
 
       {/* Content */}
-      <Box p={{ base: 2.5, md: 2 }} display="flex" flexDirection="column" flexGrow={1} justifyContent="space-between">
-        <VStack spacing={0} align="stretch">
-          <Box
-            minH={{ base: '3.9rem', md: '3.6rem' }}
-            mb={1}
-            pr={{ base: 2, md: 2 }}
-            position="relative"
-            zIndex={1}
-          >
-            <Text
-              fontSize={{ base: 'xs', md: 'xs' }}
-              color="gray.800"
-              noOfLines={3}
-              lineHeight="1.3"
-              fontWeight="medium"
-              display="-webkit-box"
-              style={{
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {product.productName}
-            </Text>
-          </Box>
+      <div className="p-2">
+        <h4 className="text-xs font-medium text-gray-900 mb-1 overflow-hidden" style={{ 
+          height: '2.5rem',
+          lineHeight: '1.25rem'
+        }}>
+          {product.productName}
+        </h4>
 
-        </VStack>
-
-        {/* Price Section - Bottom of card */}
-        <VStack align="stretch" spacing={{ base: 1.5, md: 2 }} mt="auto">
-          {/* Original Price (if discount exists) */}
-          {hasDiscount && (
-            <HStack spacing={1} alignItems="center" justify="space-between">
-              <Text
-                fontSize={{ base: 'xs', md: 'xs' }}
-                color="gray.400"
-                textDecoration="line-through"
-                fontWeight="normal"
+        {/* Original Price (if discount exists) */}
+        {hasDiscount && (
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] text-gray-400 line-through">
+              ฿{originalPrice.toLocaleString()}
+            </span>
+            <span className="text-[10px] text-[#C53030] font-medium bg-red-50 px-1.5 py-0.5 rounded-sm">
+              -{discountRate}%
+            </span>
+          </div>
+        )}
+        
+        {/* Sale Price */}
+        <div className="flex items-baseline gap-1 mb-1">
+          <span className="text-red-600 font-bold text-sm">
+            ฿{currentPrice.toLocaleString()}
+          </span>
+          {product.priceMin !== product.priceMax && product.priceMax && (
+            <>
+              <span className="text-gray-500 text-xs">-</span>
+              <span className="text-red-600 font-bold text-sm">
+                {Number(product.priceMax).toLocaleString()}
+              </span>
+            </>
+          )}
+        </div>
+        
+        {/* Rating */}
+        {rating > 0 && (
+          <div className="flex items-center gap-1">
+            {[...Array(5)].map((_, i) => (
+              <svg 
+                key={i}
+                className={`w-2 h-2 ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-200'}`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
               >
-                ฿{originalPrice.toLocaleString()}
-              </Text>
-              <Text fontSize={{ base: 'xs', md: 'xs' }} color="#C53030" fontWeight="medium" bg="red.50" px={1.5} py={0.5} borderRadius="sm">
-                -{discountRate}%
-              </Text>
-            </HStack>
-          )}
-          
-          {/* Sale Price */}
-          <HStack spacing={{ base: 0.5, md: 1 }} color="#C53030" alignItems="baseline">
-            <Text fontSize={{ base: 'sm', md: 'sm' }} fontWeight="medium">฿</Text>
-            <Text fontSize={{ base: 'xl', md: 'xl' }} fontWeight="bold" lineHeight="1">
-              {currentPrice.toLocaleString()}
-            </Text>
-            {product.priceMin !== product.priceMax && product.priceMax && (
-              <>
-                <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.500" fontWeight="medium">-</Text>
-                <Text fontSize={{ base: 'xl', md: 'xl' }} fontWeight="bold" lineHeight="1">
-                  {Number(product.priceMax).toLocaleString()}
-                </Text>
-              </>
-            )}
-          </HStack>
-          
-          {/* Rating - Small and subtle */}
-          {rating > 0 && (
-            <HStack align="center" justify="space-between">
-              <HStack>
-                {[...Array(5)].map((_, i) => (
-                  <StarIcon 
-                    key={i} 
-                    w={{ base: 2.5, md: 2 }} 
-                    h={{ base: 2.5, md: 2 }}
-                    color={i < Math.floor(rating) ? 'yellow.400' : 'gray.200'}
-                  />
-                ))}
-                <Text fontSize={{ base: '10px', md: '9px' }} color="gray.400" ml={1}>
-                  ({rating.toFixed(1)})
-                </Text>
-              </HStack>
-            </HStack>
-          )}
-          
-          {/* Shop Now Button - Enhanced CTA for both Mobile and Desktop */}
-          <Box mt={2}>
-            <Box
-              as="button"
-              w="full"
-              bg="#DC2626"
-              color="white"
-              py={2.5}
-              borderRadius="md"
-              fontSize="sm"
-              fontWeight="bold"
-              textAlign="center"
-              textTransform="uppercase"
-              letterSpacing="0.5px"
-              _hover={{ bg: '#B91C1C', transform: 'translateY(-1px)', boxShadow: 'md' }}
-              _active={{ bg: '#991B1B', transform: 'translateY(0)' }}
-              transition="all 0.2s"
-              onClick={(e: React.MouseEvent) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (product.fromShopee) {
-                  handleShopNow(e);
-                } else {
-                  window.location.href = product.offerLink;
-                }
-              }}
-              disabled={isSaving}
-              opacity={isSaving ? 0.7 : 1}
-              cursor={isSaving ? 'not-allowed' : 'pointer'}
-              boxShadow="sm"
-            >
-              {isSaving ? 'Saving...' : 'SHOP NOW'}
-            </Box>
-          </Box>
-        </VStack>
-      </Box>
-      
-      {/* Removed hidden link to prevent double-click issue on mobile */}
-    </Box>
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            ))}
+            <span className="text-[10px] text-gray-400 ml-1">
+              ({rating.toFixed(1)})
+            </span>
+          </div>
+        )}
+      </div>
+    </a>
   );
 };
 
