@@ -1457,13 +1457,11 @@ export default function NewHomePage() {
             flashSaleBanner.target_url && flashSaleBanner.target_url.trim() !== '' ? (
               <a
                 href={flashSaleBanner.target_url}
-                target={flashSaleBanner.open_new_tab ? "_blank" : "_self"}
-                rel={flashSaleBanner.open_new_tab ? "noopener noreferrer" : undefined}
                 className="block cursor-pointer relative z-10"
                 onClick={(e) => {
-                  // Ensure click works
-                  if (!flashSaleBanner.target_url || flashSaleBanner.target_url.trim() === '') {
-                    e.preventDefault();
+                  e.preventDefault();
+                  if (flashSaleBanner.target_url && flashSaleBanner.target_url.trim() !== '') {
+                    window.location.href = flashSaleBanner.target_url;
                   }
                 }}
               >
@@ -1603,10 +1601,12 @@ export default function NewHomePage() {
                 {/* Shop Now Button */}
                 <a
                   href={product.offerLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
                   className="block w-full bg-red-600 hover:bg-red-700 text-white text-center py-2 px-4 rounded-md font-bold text-sm transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.href = product.offerLink;
+                  }}
                 >
                   SHOP NOW
                 </a>
@@ -1665,13 +1665,11 @@ export default function NewHomePage() {
                 flashSaleBanner.target_url && flashSaleBanner.target_url.trim() !== '' ? (
                   <a
                     href={flashSaleBanner.target_url}
-                    target={flashSaleBanner.open_new_tab ? "_blank" : "_self"}
-                    rel={flashSaleBanner.open_new_tab ? "noopener noreferrer" : undefined}
                     className="block cursor-pointer relative z-10"
                     onClick={(e) => {
-                      // Ensure click works
-                      if (!flashSaleBanner.target_url || flashSaleBanner.target_url.trim() === '') {
-                        e.preventDefault();
+                      e.preventDefault();
+                      if (flashSaleBanner.target_url && flashSaleBanner.target_url.trim() !== '') {
+                        window.location.href = flashSaleBanner.target_url;
                       }
                     }}
                   >
@@ -1804,10 +1802,12 @@ export default function NewHomePage() {
                       {/* Shop Now Button */}
                       <a
                         href={product.offerLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
                         className="block w-full bg-red-600 hover:bg-red-700 text-white text-center py-2.5 px-4 rounded-md font-bold text-sm transition-colors active:bg-red-800"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          window.location.href = product.offerLink;
+                        }}
                       >
                         SHOP NOW
                       </a>
@@ -1892,10 +1892,14 @@ export default function NewHomePage() {
                     {banner.target_url && banner.target_url.trim() !== '' && (
                       <a
                         href={banner.target_url}
-                        target={banner.open_new_tab ? "_blank" : "_self"}
-                        rel={banner.open_new_tab ? "noopener noreferrer" : undefined}
                         className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-40 px-6 md:px-8 py-2.5 md:py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-sm md:text-base rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (banner.target_url) {
+                            window.location.href = banner.target_url;
+                          }
+                        }}
                       >
                         SHOP NOW
                       </a>

@@ -318,11 +318,14 @@ export default function ImprovedProductCard({
                 <Button
                   as="a"
                   href={product.productLink}
-                  target="_blank"
                   size="sm"
                   variant="outline"
                   leftIcon={<ViewIcon />}
                   colorScheme="blue"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.location.href = product.productLink!;
+                  }}
                 >
                   ดูสินค้า
                 </Button>
@@ -333,11 +336,14 @@ export default function ImprovedProductCard({
                 <Button
                   as="a"
                   href={product.offerLink}
-                  target="_blank"
                   size="sm"
                   variant="outline"
                   leftIcon={<ExternalLinkIcon />}
                   colorScheme="green"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.location.href = product.offerLink;
+                  }}
                 >
                   Affiliate Link
                 </Button>
