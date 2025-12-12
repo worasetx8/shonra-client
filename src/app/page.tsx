@@ -1342,7 +1342,7 @@ export default function NewHomePage() {
                     // ถ้ามี Shopee results → แสดง Shopee results (เพราะ query มาเพื่อเพิ่มเติม)
                     if (shopeeSearchResults.length > 0) {
                       return (
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-20 lg:pb-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 pb-20 lg:pb-4">
                           {shopeeSearchResults.map((product) => (
                             <ModernProductCard key={product.itemId} product={product} />
                           ))}
@@ -1353,7 +1353,7 @@ export default function NewHomePage() {
                     // ถ้าไม่มี Shopee results → แสดง database results (ถ้ามี)
                     if (searchResults.length > 0) {
                       return (
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-20 lg:pb-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 pb-20 lg:pb-4">
                           {searchResults.map((product) => (
                             <ModernProductCard key={product.itemId} product={product} />
                           ))}
@@ -1389,7 +1389,7 @@ export default function NewHomePage() {
 
                     return (
                       <>
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-20 lg:pb-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 pb-20 lg:pb-4">
                           {visibleProducts.map((product) => (
                             <ModernProductCard key={product.itemId} product={product} />
                           ))}
@@ -1722,7 +1722,7 @@ export default function NewHomePage() {
               <div className="p-3">
               {flashSaleLoading ? (
                 // Loading skeleton - 2 columns
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                 {Array.from({ length: 4 }, (_, i) => (
                   <div key={i} className="bg-gray-50 rounded-lg p-2 animate-pulse">
                     <div className="w-full aspect-square bg-gray-200 rounded-lg mb-2"></div>
@@ -1732,7 +1732,7 @@ export default function NewHomePage() {
                 ))}
                 </div>
               ) : flashSaleProducts.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                 {flashSaleProducts.map((product, index) => {
                   const endTime = (product as any).periodEndTime || 0;
                   const nowSec = Math.floor(Date.now() / 1000);
