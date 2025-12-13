@@ -88,7 +88,7 @@ export async function fetchBanners(positionName: string) {
 
 /**
  * Search Shopee products from backend
- * This calls the Next.js API route which proxies to the backend
+ * Calls backend API directly from client-side
  */
 export async function searchShopeeProducts(params: {
   page?: string;
@@ -96,23 +96,11 @@ export async function searchShopeeProducts(params: {
   commissionRate?: string;
   ratingStar?: string;
 }) {
-  // Call Next.js API route (client-side), not backend directly
-  const searchParams = new URLSearchParams();
-  if (params.page) searchParams.set("page", params.page);
-  if (params.search) searchParams.set("search", params.search);
-  if (params.commissionRate) searchParams.set("commissionRate", params.commissionRate);
-  if (params.ratingStar) searchParams.set("ratingStar", params.ratingStar);
+  const searchParams: Record<string, string> = {};
+  if (params.page) searchParams.page = params.page;
+  if (params.search) searchParams.search = params.search;
+  if (params.commissionRate) searchParams.commissionRate = params.commissionRate;
+  if (params.ratingStar) searchParams.ratingStar = params.ratingStar;
 
-  const url = `/api/shopee/search?${searchParams.toString()}`;
-  const response = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
-  }
-
-  return response.json();
+  return fetchFromBackend("/api/products/search", { params: searchParams });
 }
